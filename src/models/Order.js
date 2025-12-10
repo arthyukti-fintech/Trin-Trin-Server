@@ -1,0 +1,20 @@
+const mongoose = require('mongoose');
+
+const orderSchema = new mongoose.Schema({
+    userId: String,
+    timeSlot: Date,
+    items: [
+        {
+            item: { type: mongoose.Schema.Types.ObjectId, ref: 'MenuItem' },
+            quantity: Number
+        }
+    ],
+    status: {
+        type: String,
+        enum: ['pending', 'confirmed', 'cancelled', 'failed'],
+        default: 'pending'
+    }
+}, { timestamps: true });
+
+const Order = mongoose.model('Order', orderSchema);
+module.exports = { Order }
