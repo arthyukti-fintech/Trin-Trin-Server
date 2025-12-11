@@ -1,9 +1,16 @@
-const { Worker } = require('bullmq');
+const { Worker, QueueEvents } = require('bullmq');
 const mongoose = require('mongoose');
+const { MenuItem } = require('../models/MenuItem');
+const { Order } = require('../models/Order');
+const path = require("path");
+const dotenv = require("dotenv");
+const redis = require('../utils/redisClient');
 
 dotenv.config({
-    path: path.resolve(process.cwd(), `.env.${process.env.NODE_ENV}`)
+  path: path.resolve(process.cwd(), `.env.${process.env.NODE_ENV || 'development'}`)
 });
+
+console.log("process.env.MONGO_URI", process.env.MONGO_URI)
 
 mongoose.connect(process.env.MONGO_URI);
 
@@ -57,7 +64,7 @@ const worker = new Worker('orderQueue', async job => {
     await session.commitTransaction();
     session.endSession();
 
-    emitOrderPlaced(order[0]); // 👈 Realtime to admins or users
+    emitOrderPlaced(order[0]);
     return order[0];
   } catch (err) {
     await session.abortTransaction();
@@ -66,7 +73,7 @@ const worker = new Worker('orderQueue', async job => {
     throw err;
   }
 }, {
-  concurrency: 5,  // 🧠 PLAYSAFE: 5 jobs at a time
+  concurrency: 1000, 
   connection: redis,
 });
 
