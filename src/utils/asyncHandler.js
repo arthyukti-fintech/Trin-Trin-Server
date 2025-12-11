@@ -5,5 +5,4 @@ const asyncHandler = (requestURL) => {
         })
     }
 }
-
 module.exports = { asyncHandler }

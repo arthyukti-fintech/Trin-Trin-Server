@@ -4,6 +4,8 @@ const useragent = require('express-useragent');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const { router } = require("./queues/bull.dashboard");
+const { authRouter } = require("./router/authRouter");
+const { verifyFirebaseToken } = require("./middleware/fireBaseMiddleware");
 
 
 
@@ -55,5 +57,6 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 app.use('/admin/queues', router);
+app.use("/auth", verifyFirebaseToken, authRouter);
 
 module.exports = { app }
