@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const { router } = require("./queues/bull.dashboard");
 const { authRouter } = require("./router/authRouter");
 const { verifyFirebaseToken } = require("./middleware/fireBaseMiddleware");
+const { testRouter } = require("./router/queueTestingRouter");
 
 
 
@@ -58,5 +59,6 @@ app.use(cors(corsOptions));
 
 app.use('/admin/queues', router);
 app.use("/auth", verifyFirebaseToken, authRouter);
+app.use("/api", testRouter);
 
 module.exports = { app }

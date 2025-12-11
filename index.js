@@ -24,6 +24,7 @@ app.use(globalErrorHandler);
 (async () => {
     try {
         await connection();
+        require("./src/workers/order.worker.js");
         server.listen(process.env.PORT, () => {
             console.log(
                 `🚀 Server (API + Socket.IO) running on port ${process.env.PORT} in ${process.env.NODE_ENV} phase.`

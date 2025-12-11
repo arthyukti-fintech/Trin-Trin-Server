@@ -14,7 +14,7 @@ const orderQueue = new Queue('orderQueue', {
 (async () => {
   console.time('Job Enqueue');
 
-  const totalJobs = 10000;
+  const totalJobs = 100;
 
   const jobs = [];
   for (let i = 0; i < totalJobs; i++) {
