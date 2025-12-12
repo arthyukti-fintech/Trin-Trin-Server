@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const { Restaurant } = require("../models/restaurant.model");
 const { ApiError } = require("../utils/apiError");
 const { ApiResponse } = require("../utils/apiResponse");
@@ -5,40 +6,100 @@ const { asyncHandler } = require("../utils/asyncHandler");
 const { restaurantCreateSchema } = require("../validation/restaurantValidation");
 
 const createRestaurant = asyncHandler(async (req, res, next) => {
-    const { error } = restaurantCreateSchema.validate(req.body);
+
+    if (!req.body || Object.keys(req.body).length === 0) {
+        return next(new ApiError("Request body cannot be empty.", 400));
+    }
+
+    const { error, value } = restaurantCreateSchema.validate(req.body, {
+        abortEarly: false,
+        stripUnknown: true,
+    });
 
     if (error) {
-        return next(new ApiError(error.details[0].message, 400));
+        const validationErrors = error.details.map((err) => ({
+            field: err.path.join('.'),
+            message: err.message,
+        }));
+
+        return next(new ApiError("Validation failed", 400, validationErrors));
     }
 
-    const { phoneNumber, name } = req.body;
+    const { phoneNumber, name } = value;
 
-    const existing = await Restaurant.findOne({ phoneNumber, name });
+    const existing = await Restaurant.findOne({
+        $or: [
+            { phoneNumber },
+            { name: { $regex: new RegExp(`^${name}$`, "i") } }
+        ]
+    });
 
     if (existing) {
-        return next(new ApiError("Restaurant already exists with this phone number.", 400));
+        return next(
+            new ApiError(
+                "A restaurant already exists with either this phone number or name.",
+                400
+            )
+        );
     }
 
-    const restaurant = await Restaurant.create(req.body);
+    const restaurant = await Restaurant.create(value);
 
-    return res
-        .status(201)
-        .json(new ApiResponse(201, restaurant, "Restaurant created successfully"));
+    return res.status(201).json(
+        new ApiResponse(201, restaurant, "Restaurant created successfully.")
+    );
 });
 
-const getAllResturants = asyncHandler(async (req, res) => {
-    const restaurants = await Restaurant.find().sort({ createdAt: -1 })
+const getAllResturants = asyncHandler(async (req, res, next) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 30;
 
-    return res.status(200).json(new ApiResponse(200, restaurants, "Restaurants fetched successfully"))
+    if (page < 1 || limit < 1) {
+        return next(new ApiError("Page and limit must be positive numbers.", 400));
+    }
+
+    const skip = (page - 1) * limit;
+
+    const [restaurants, total] = await Promise.all([
+        Restaurant.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
+        Restaurant.countDocuments()
+    ])
+
+    if (!restaurants || restaurants.length === 0) {
+        return next(new ApiError("No restaurants found.", 404));
+    }
+
+    if (!restaurants || restaurants.length === 0) {
+        return next(new ApiError("No restaurants found.", 404));
+    }
+
+    const totalPages = Math.ceil(total / limit)
+
+    return res.status(200).json(
+        new ApiResponse(200, {
+            restaurants,
+            pagination: {
+                total,
+                totalPages,
+                currentPage: page,
+                perPage: limit,
+            },
+        }, "Restaurants fetched successfully")
+    );
+
 })
 
 const getRestaurantById = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
 
-    const restaurant = await Restaurant.findById(id);
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return next(new ApiError("Invalid account ID.", 400));
+    }
+
+    const restaurant = await Restaurant.findById(id).lean();
 
     if (!restaurant) {
-        return next(new ApiError("Restaurant not found.", 404));
+        return next(new ApiError("Restaurant not found with the provided ID.", 404));
     }
 
     return res
@@ -48,35 +109,51 @@ const getRestaurantById = asyncHandler(async (req, res, next) => {
 
 const updateRestaurant = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return next(new ApiError("Invalid account ID.", 400));
+    }
 
-    const { error } = restaurantCreateSchema.validate(req.body, { allowUnknown: true });
+    if (!req.body || Object.keys(req.body).length === 0) {
+        return next(new ApiError("Request body is empty. Nothing to update.", 400));
+    }
+
+    const { error, value } = restaurantCreateSchema
+        .fork(Object.keys(restaurantCreateSchema.describe().keys), (schema) => schema.optional())
+        .validate(req.body, {
+            abortEarly: false,
+            stripUnknown: true,
+        });
 
     if (error) {
         return next(new ApiError(error.details[0].message, 400));
     }
 
-    const restaurant = await Restaurant.findByIdAndUpdate(id, req.body, {
+    const updatedRestaurant = await Restaurant.findByIdAndUpdate(id, value, {
         new: true,
         runValidators: true,
     });
 
-    if (!restaurant) {
-        return next(new ApiError("Restaurant not found.", 404));
+    if (!updatedRestaurant) {
+        return next(new ApiError("Restaurant not found with this ID.", 404));
     }
 
-    return res
-        .status(200)
-        .json(new ApiResponse(200, restaurant, "Restaurant updated successfully"));
-});
+    return res.status(200).json(
+        new ApiResponse(200, updatedRestaurant, "Restaurant updated successfully.")
+    );
+})
 
 const deleteRestaurant = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
-
-    const restaurant = await Restaurant.findByIdAndDelete(id);
-
-    if (!restaurant) {
-        return next(new ApiError("Restaurant not found.", 404));
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return next(new ApiError("Invalid account ID.", 400));
     }
+
+     const restaurant = await Restaurant.findById(id);
+    if (!restaurant) {
+        return next(new ApiError("Restaurant not found with the provided ID.", 404));
+    }
+
+    await restaurant.deleteOne()
 
     return res
         .status(200)
