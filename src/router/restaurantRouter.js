@@ -3,6 +3,7 @@ const { createRestaurant, getAllResturants, getRestaurantById, updateRestaurant,
 
 const resturantRouter = express.Router()
 
+
 resturantRouter.post("/create", createRestaurant);
 resturantRouter.get("/getall", getAllResturants);
 resturantRouter.get("/getall/:id", getRestaurantById);
