@@ -1,18 +1,24 @@
 const { Worker, QueueEvents } = require('bullmq');
 const mongoose = require('mongoose');
-const { MenuItem } = require('../models/MenuItem');
-const { Order } = require('../models/Order');
-const path = require("path");
-const dotenv = require("dotenv");
+const path = require('path');
+const dotenv = require('dotenv');
 const redis = require('../utils/redisClient');
 
+const { MenuItem } = require('../models/MenuItem');
+const { Order } = require('../models/Order');
+const { emitOrderPlaced, emitAvailabilityChange } = require('../sockets/emitter');
+
+// ✅ Load environment variables
 dotenv.config({
-  path: path.resolve(process.cwd(), `.env.${process.env.NODE_ENV || 'development'}`)
+  path: path.resolve(process.cwd(), `.env.${process.env.NODE_ENV || 'development'}`),
 });
 
-console.log("process.env.MONGO_URI", process.env.MONGO_URI)
+console.log("📦 MONGO_URI:", process.env.MONGO_URI);
 
-mongoose.connect(process.env.MONGO_URI);
+// ✅ Connect MongoDB
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ MongoDB connected'))
+  .catch(err => console.error('❌ MongoDB connection error:', err));
 
 const worker = new Worker('orderQueue', async job => {
   const { userId, items, timeSlot } = job.data;
@@ -23,7 +29,7 @@ const worker = new Worker('orderQueue', async job => {
   try {
     const orderedItems = [];
 
-    for (let item of items) {
+    for (const item of items) {
       const menuItem = await MenuItem.findOneAndUpdate(
         {
           _id: item.itemId,
@@ -34,14 +40,15 @@ const worker = new Worker('orderQueue', async job => {
         },
         { new: true, session }
       );
-
       if (!menuItem) {
         throw new Error(`Not enough stock for item ${item.itemId}`);
       }
 
-      if (menuItem.stock === 0) {
+      if (menuItem.stock === 0 && menuItem.available !== false) {
+        // Only mark unavailable if it's not already
         menuItem.available = false;
         await menuItem.save({ session });
+
         emitAvailabilityChange(menuItem._id, false);
       }
 
@@ -51,7 +58,7 @@ const worker = new Worker('orderQueue', async job => {
       });
     }
 
-    const order = await Order.create(
+    const [order] = await Order.create(
       [{
         user: userId,
         items: orderedItems,
@@ -62,22 +69,29 @@ const worker = new Worker('orderQueue', async job => {
     );
 
     await session.commitTransaction();
-    session.endSession();
 
-    emitOrderPlaced(order[0]);
-    return order[0];
+    emitOrderPlaced(order);
+    console.log(`✅ Job ${job.id} completed`);
+
+    return order;
+
   } catch (err) {
-    await session.abortTransaction();
-    session.endSession();
-    console.error('❌ Job failed:', err);
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+    console.error(`❌ Job ${job.id} failed:`, err);
     throw err;
+  } finally {
+    session.endSession();
   }
+
 }, {
   concurrency: 1000,
   connection: redis,
 });
 
 const queueEvents = new QueueEvents('orderQueue', { connection: redis });
-queueEvents.on('failed', (jobId, failedReason) => {
-  console.error(`❌ Job ${jobId} failed: ${failedReason}`);
+
+queueEvents.on('failed', ({ jobId, failedReason }) => {
+  console.error(`❌ Job Failed: ID=${jobId}, Reason=${failedReason}`);
 });
