@@ -20,7 +20,6 @@ mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
-// ✅ Create BullMQ Worker
 const worker = new Worker('orderQueue', async job => {
   const { userId, items, timeSlot } = job.data;
 
