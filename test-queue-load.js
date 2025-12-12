@@ -4,7 +4,7 @@ const { Queue } = require('bullmq');
 const redis = require("./src/utils/redisClient");
 
 dotenv.config({
-    path: path.resolve(process.cwd(), `.env.${process.env.NODE_ENV}`)
+  path: path.resolve(process.cwd(), `.env.${process.env.NODE_ENV}`)
 });
 
 const orderQueue = new Queue('orderQueue', {
@@ -14,7 +14,7 @@ const orderQueue = new Queue('orderQueue', {
 (async () => {
   console.time('Job Enqueue');
 
-  const totalJobs = 10000;
+  const totalJobs = 100000;
 
   const jobs = [];
   for (let i = 0; i < totalJobs; i++) {

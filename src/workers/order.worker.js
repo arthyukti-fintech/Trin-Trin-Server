@@ -73,7 +73,7 @@ const worker = new Worker('orderQueue', async job => {
     throw err;
   }
 }, {
-  concurrency: 1000, 
+  concurrency: 1000,
   connection: redis,
 });
 

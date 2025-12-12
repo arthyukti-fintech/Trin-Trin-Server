@@ -46,4 +46,4 @@ const loginProfile = asyncHandler(async (req, res, next) => {
 
 });
 
-module.exports={loginProfile}
+module.exports = { loginProfile }
