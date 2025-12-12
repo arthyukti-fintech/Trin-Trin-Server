@@ -14,29 +14,23 @@ const restaurantSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "Profile",
             required: true,
-
         },
         phoneNumber: { type: String, required: true },
-
         images: {
-            exterior: { type: String },   // URL or local path
+            exterior: { type: String }, 
             interior: { type: String },
             menuCard: { type: String },
         },
-
         averageDeliveryTime: { type: String, default: "30-40 min" },
         priceForTwo: { type: Number, default: 300 },
-
         offers: {
             discountText: { type: String, default: "" },
             percentage: { type: Number, default: 0 },
         },
-
         location: {
             lat: { type: Number },
             lng: { type: Number },
         },
-
         isVegOnly: { type: Boolean, default: false },
         isActive: { type: Boolean, default: true },
     },
