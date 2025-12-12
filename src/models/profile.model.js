@@ -47,7 +47,7 @@ const ProfileSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ["user", "admin", "superAdmin"],
+        enum: ["user", "resturantsOwner", "superAdmin"],
         default: "user"
     },
     isActive: {

@@ -4,14 +4,18 @@ const restaurantSchema = new mongoose.Schema(
     {
         name: { type: String, required: true },
         cuisine: { type: String, required: true },
-
         address: {
             street: { type: String },
             city: { type: String },
             state: { type: String },
             pincode: { type: String },
         },
+        resturantOwner: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Profile",
+            required: true,
 
+        },
         phoneNumber: { type: String, required: true },
 
         images: {
