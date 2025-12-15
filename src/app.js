@@ -8,7 +8,7 @@ const { authRouter } = require("./router/authRouter");
 const { verifyFirebaseToken } = require("./middleware/fireBaseMiddleware");
 const { resturantRouter } = require("./router/restaurantRouter");
 const { testRouter } = require("./router/queueTestingRouter");
-
+const { profileRouter } = require("./router/profileRouter");
 
 
 const app = express();
@@ -61,6 +61,7 @@ app.use(cors(corsOptions));
 app.use('/admin/queues', router);
 app.use("/auth", verifyFirebaseToken, authRouter);
 app.use("/api/restaurants", resturantRouter);
+app.use("/api", profileRouter);
 
 app.use("/api", testRouter);
 

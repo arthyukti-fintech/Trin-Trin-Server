@@ -22,7 +22,7 @@ const createRestaurant = asyncHandler(async (req, res, next) => {
             message: err.message,
         }));
 
-        return next(new ApiError("Validation failed", 400, validationErrors));
+        return next(new ApiError(validationErrors, 400));
     }
 
     const { phoneNumber, name } = value;
@@ -148,7 +148,7 @@ const deleteRestaurant = asyncHandler(async (req, res, next) => {
         return next(new ApiError("Invalid account ID.", 400));
     }
 
-     const restaurant = await Restaurant.findById(id);
+    const restaurant = await Restaurant.findById(id);
     if (!restaurant) {
         return next(new ApiError("Restaurant not found with the provided ID.", 404));
     }
