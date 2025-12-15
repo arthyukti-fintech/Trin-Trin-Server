@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const { Profile } = require("../models/profile.model");
 const { ApiError } = require("../utils/apiError");
 const { ApiResponse } = require("../utils/apiResponse");
@@ -5,11 +6,16 @@ const { asyncHandler } = require("../utils/asyncHandler");
 const { profileSchema } = require("../validation/profileValidation");
 
 const loginProfile = asyncHandler(async (req, res, next) => {
-    const user = req.user;
+    // const user = req.user;
 
-    if (!user) {
-        return next(new ApiError("You are not authorized to access this platform.", 401));
+    // if (!user) {
+    //     return next(new ApiError("You are not authorized to access this platform.", 401));
+    // }
+
+    if (!req.body || Object.keys(req.body).length === 0) {
+        return next(new ApiError("Request body cannot be empty.", 400));
     }
+
     const { error } = profileSchema.validate(req.body);
     if (error) {
         console.log(error)
@@ -17,9 +23,10 @@ const loginProfile = asyncHandler(async (req, res, next) => {
     }
     const { phoneNumber, expoToken } = req.body;
 
-    if (phoneNumber !== user.phoneNumber) {
-        return next(new ApiError("Your credentials do not match.", 401));
-    }
+    // if (phoneNumber !== user.phoneNumber) {
+    //     return next(new ApiError("Your credentials do not match.", 401));
+    // }
+
 
     const userAgent = req.headers["user-agent"] || "Unknown";
     const ip = req.ip || req.connection.remoteAddress;
@@ -47,26 +54,20 @@ const loginProfile = asyncHandler(async (req, res, next) => {
 });
 
 const getMyProfile = asyncHandler(async (req, res, next) => {
-    const profile = req.profile; // injected by loadProfile middleware
+    const userId = req.userId; // injected by loadProfile middleware
+    const profile = await Profile.findById(userId).select("-sessions -activityLog -ip -userAgent -os -accessToken ")
 
     return res.status(200).json(
-        new ApiResponse(200, {
-            profileId: profile.profileId,
-            phoneNumber: profile.phoneNumber,
-            role: profile.role,
-            status: profile.status,
-            isActive: profile.isActive,
-            gender: profile.gender,
-            referredCount: profile.referredCount,
-            createdAt: profile.createdAt,
-            updatedAt: profile.updatedAt,
-        })
+        new ApiResponse(200, profile)
     );
 });
 
 const getProfileById = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return next(new ApiError("Invalid account ID.", 400));
+    }
     const profile = await Profile.findById(id);
 
     if (!profile) {
@@ -103,8 +104,12 @@ const getAllProfiles = asyncHandler(async (req, res, next) => {
 
 const updateProfileStatus = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
-    const { status, isActive } = req.body;
 
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return next(new ApiError("Invalid account ID.", 400));
+    }
+    const { status, isActive } = req.body;
     const profile = await Profile.findById(id);
 
     if (!profile) {
@@ -121,27 +126,9 @@ const updateProfileStatus = asyncHandler(async (req, res, next) => {
     );
 });
 
-const getPublicProfile = asyncHandler(async (req, res, next) => {
-    const { profileId } = req.params;
-
-    const profile = await Profile.findOne({
-        profileId,
-        isActive: true,
-    }).select("profileId role createdAt");
-
-    if (!profile) {
-        return next(new ApiError("Profile not found", 404));
-    }
-
-    return res.status(200).json(
-        new ApiResponse(200, profile)
-    );
-});
-
 module.exports = {
     loginProfile, getMyProfile,
     getProfileById,
     getAllProfiles,
     updateProfileStatus,
-    getPublicProfile,
 }

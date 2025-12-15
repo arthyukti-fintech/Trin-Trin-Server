@@ -47,7 +47,7 @@ const ProfileSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ["user", "admin", "superAdmin"],
+        enum: ["user", "resturantsOwner", "admin"],
         default: "user"
     },
     isActive: {
@@ -126,13 +126,11 @@ ProfileSchema.pre("save", function (next) {
         const randomNumber = Math.floor(10 + Math.random() * 90);
         this.profileId = `TRIN${first2}${randomNumber}${last2}`;
     }
-    next();
 });
 
 ProfileSchema.pre("save", async function (next) {
-    if (!this.password || !this.isModified("password")) return next();
+    if (!this.password || !this.isModified("password")) return;
     this.password = await bcrypt.hash(this.password, 8);
-    next();
 });
 
 ProfileSchema.methods.isCorrectPassword = async function (plainPassword) {
@@ -148,7 +146,6 @@ ProfileSchema.pre("save", function (next) {
         const randomNumber = Math.floor(100000 + Math.random() * 900000);
         this.referralCode = `${first4}${randomNumber}`;
     }
-    next();
 });
 
 ProfileSchema.methods.generateAccessToken = function () {

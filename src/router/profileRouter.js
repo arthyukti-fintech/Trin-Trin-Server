@@ -1,16 +1,13 @@
 const express = require("express");
 
-const { verifyFirebaseToken } = require("../middleware/fireBaseMiddleware");
-const { loadProfile } = require("../middleware/loadProfile");
-const { allowRoles } = require("../middleware/roleGuard");
-
 const {
     getMyProfile,
     getProfileById,
     getAllProfiles,
     updateProfileStatus,
-    getPublicProfile,
 } = require("../controllers/profileController");
+const { authMiddleware } = require("../middleware/authMiddleware");
+const { adminMiddleware } = require("../middleware/adminMiddleware");
 
 const profileRouter = express.Router();
 
@@ -18,8 +15,7 @@ const profileRouter = express.Router();
 
 profileRouter.get(
     "/profile/me",
-    verifyFirebaseToken,
-    loadProfile,
+    authMiddleware,
     getMyProfile
 );
 
@@ -27,33 +23,20 @@ profileRouter.get(
 
 profileRouter.get(
     "/profile",
-    // verifyFirebaseToken,
-    loadProfile,
-    allowRoles("admin"),
+    adminMiddleware,
     getAllProfiles
 );
 
 profileRouter.get(
     "/profile/:id",
-    verifyFirebaseToken,
-    loadProfile,
-    allowRoles("admin"),
+    adminMiddleware,
     getProfileById
 );
 
 profileRouter.patch(
     "/profile/:id/status",
-    verifyFirebaseToken,
-    loadProfile,
-    allowRoles("admin"),
+    adminMiddleware,
     updateProfileStatus
-);
-
-/* ================= PUBLIC ================= */
-
-profileRouter.get(
-    "/profile/public/:profileId",
-    getPublicProfile
 );
 
 module.exports = { profileRouter };
