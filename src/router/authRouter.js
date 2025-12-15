@@ -7,6 +7,6 @@ const authRouter = express.Router({
     strict: true
 });
 
-authRouter.post("/login", loginProfile);
+authRouter.post("/login", verifyFirebaseToken, loginProfile);
 
 module.exports = { authRouter };

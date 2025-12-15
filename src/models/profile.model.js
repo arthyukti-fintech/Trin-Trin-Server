@@ -47,7 +47,7 @@ const ProfileSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ["user", "resturantsOwner", "admin"],
+        enum: ["user", "resturantsOwner", "admin", "superAdmin"],
         default: "user"
     },
     isActive: {
@@ -104,7 +104,12 @@ const ProfileSchema = new mongoose.Schema({
     },
     profileImage: {
         type: String
-    }
+    },
+    createdViaAPI: {
+    type: Boolean,
+    default: false,
+    select: false 
+}
 }, {
     timestamps: true,
 });
@@ -145,6 +150,20 @@ ProfileSchema.pre("save", function (next) {
         const first4 = this.fullName.slice(0, 4).toUpperCase();
         const randomNumber = Math.floor(100000 + Math.random() * 900000);
         this.referralCode = `${first4}${randomNumber}`;
+    }
+});
+
+ProfileSchema.pre('save', function (next) {
+    if (this.isNew && this.role === 'superAdmin' && this.createdViaAPI !== true) {
+        return next(
+            new Error("Direct creation of superAdmin is not allowed. Use the secure API.")
+        );
+    }
+
+    if (!this.isNew && this.isModified('role') && this.role === 'superAdmin') {
+        return next(
+            new Error("Updating role to superAdmin is not allowed. Contact system admin.")
+        );
     }
 });
 

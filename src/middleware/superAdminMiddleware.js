@@ -4,7 +4,7 @@ const { ApiError } = require("../utils/apiError");
 const { Profile } = require("../models/profile.model");
 
 
-const adminMiddleware = asyncHandler(async (req, res, next) => {
+const superAdminMiddleware = asyncHandler(async (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
         return next(new ApiError("Authorization token missing", 401));
@@ -22,7 +22,7 @@ const adminMiddleware = asyncHandler(async (req, res, next) => {
             return next(new ApiError("You are logged out. Please log in again.", 403));
         }
 
-       if (user.role !== "admin" && user.role !== "superAdmin") {
+        if (user.role !== "superAdmin") {
             return next(new ApiError("You are not allowed to access this platform.", 403));
         }
 
@@ -43,4 +43,4 @@ const adminMiddleware = asyncHandler(async (req, res, next) => {
 
 })
 
-module.exports = { adminMiddleware }
+module.exports = { superAdminMiddleware }
