@@ -5,9 +5,11 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const { router } = require("./queues/bull.dashboard");
 const { authRouter } = require("./router/authRouter");
-const { verifyFirebaseToken } = require("./middleware/fireBaseMiddleware");
 const { resturantRouter } = require("./router/restaurantRouter");
-const { testRouter } = require("./router/queueTestingRouter");
+// const { testRouter } = require("./router/queueTestingRouter");
+const { profileRouter } = require("./router/profileRouter");
+const { adminRouter } = require("./router/adminRouter");
+const { superAdminRouter } = require("./router/superAdminRouter");
 
 
 
@@ -58,10 +60,12 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+app.use("/auth", authRouter);
 app.use('/admin/queues', router);
-app.use("/auth", verifyFirebaseToken, authRouter);
 app.use("/api/restaurants", resturantRouter);
-
-app.use("/api", testRouter);
+app.use("/api", profileRouter);
+app.use("/restaurants", resturantRouter);
+app.use("/admin", adminRouter);
+app.use("/super-admin", superAdminRouter);
 
 module.exports = { app }

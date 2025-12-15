@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const { Profile } = require("../models/profile.model");
 const { ApiError } = require("../utils/apiError");
 const { ApiResponse } = require("../utils/apiResponse");
@@ -10,6 +11,11 @@ const loginProfile = asyncHandler(async (req, res, next) => {
     if (!user) {
         return next(new ApiError("You are not authorized to access this platform.", 401));
     }
+
+    if (!req.body || Object.keys(req.body).length === 0) {
+        return next(new ApiError("Request body cannot be empty.", 400));
+    }
+
     const { error } = profileSchema.validate(req.body);
     if (error) {
         console.log(error)
@@ -20,6 +26,7 @@ const loginProfile = asyncHandler(async (req, res, next) => {
     if (phoneNumber !== user.phoneNumber) {
         return next(new ApiError("Your credentials do not match.", 401));
     }
+
 
     const userAgent = req.headers["user-agent"] || "Unknown";
     const ip = req.ip || req.connection.remoteAddress;
@@ -46,4 +53,18 @@ const loginProfile = asyncHandler(async (req, res, next) => {
 
 });
 
-module.exports = { loginProfile }
+const getMyProfile = asyncHandler(async (req, res, next) => {
+    const userId = req.userId; 
+    const profile = await Profile.findById(userId).select("-sessions -activityLog -ip -userAgent -os -accessToken ")
+
+    return res.status(200).json(
+        new ApiResponse(200, profile)
+    );
+});
+
+
+module.exports = {
+    loginProfile,
+     getMyProfile,
+
+}
