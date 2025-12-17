@@ -5,12 +5,13 @@ const { ApiResponse } = require("../utils/apiResponse");
 const { asyncHandler } = require("../utils/asyncHandler");
 const { profileSchema } = require("../validation/profileValidation");
 
-const loginProfile = asyncHandler(async (req, res, next) => {
-    const user = req.user;
 
-    if (!user) {
-        return next(new ApiError("You are not authorized to access this platform.", 401));
-    }
+const loginProfile = asyncHandler(async (req, res, next) => {
+    // const user = req.user;
+
+    // if (!user) {
+    //     return next(new ApiError("You are not authorized to access this platform.", 401));
+    // }
 
     if (!req.body || Object.keys(req.body).length === 0) {
         return next(new ApiError("Request body cannot be empty.", 400));
@@ -23,9 +24,9 @@ const loginProfile = asyncHandler(async (req, res, next) => {
     }
     const { phoneNumber, expoToken } = req.body;
 
-    if (phoneNumber !== user.phoneNumber) {
-        return next(new ApiError("Your credentials do not match.", 401));
-    }
+    // if (phoneNumber !== user.phoneNumber) {
+    //     return next(new ApiError("Your credentials do not match.", 401));
+    // }
 
 
     const userAgent = req.headers["user-agent"] || "Unknown";
