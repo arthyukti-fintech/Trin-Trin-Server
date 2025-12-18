@@ -21,7 +21,6 @@ const createAdminAccount = asyncHandler(async (req, res, next) => {
 
     const { phoneNumber, password, fullName, email } = req.body;
 
-
     const userAgent = req.headers["user-agent"] || "Unknown";
     const ip = req.ip || req.connection?.remoteAddress || "Unknown";
     const os = req.useragent?.os || "Unknown";
@@ -76,10 +75,10 @@ const createAdminAccount = asyncHandler(async (req, res, next) => {
     const accessToken = await profile.generateAccessToken();
 
 
-     if (profile.role !== "user") {
+    if (profile.role !== "user") {
         profile.sessions.push({ token: accessToken });
 
-       if (profile.sessions.length > 30) {
+        if (profile.sessions.length > 30) {
             profile.sessions = profile.sessions.slice(-30);
         }
     }

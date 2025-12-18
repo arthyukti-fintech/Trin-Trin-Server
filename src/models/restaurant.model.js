@@ -17,7 +17,7 @@ const restaurantSchema = new mongoose.Schema(
         },
         phoneNumber: { type: String, required: true },
         images: {
-            exterior: { type: String }, 
+            exterior: { type: String },
             interior: { type: String },
             menuCard: { type: String },
         },

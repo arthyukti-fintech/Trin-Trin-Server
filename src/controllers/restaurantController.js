@@ -6,15 +6,16 @@ const { asyncHandler } = require("../utils/asyncHandler");
 const { restaurantCreateSchema } = require("../validation/restaurantValidation");
 
 const createRestaurant = asyncHandler(async (req, res, next) => {
+    const userId = req.userId;
+    if (!userId) {
+        return next(new ApiError("Unauthorized access. Please login first.", 401));
+    }
 
     if (!req.body || Object.keys(req.body).length === 0) {
         return next(new ApiError("Request body cannot be empty.", 400));
     }
 
-    const { error, value } = restaurantCreateSchema.validate(req.body, {
-        abortEarly: false,
-        stripUnknown: true,
-    });
+    const { error, value } = restaurantCreateSchema.validate(req.body);
 
     if (error) {
         const validationErrors = error.details.map((err) => ({
@@ -42,8 +43,9 @@ const createRestaurant = asyncHandler(async (req, res, next) => {
             )
         );
     }
+    console.log({ ...value, resturantOwner: userId })
+    const restaurant = await Restaurant.create({ ...value, resturantOwner: userId });
 
-    const restaurant = await Restaurant.create(value);
 
     return res.status(201).json(
         new ApiResponse(201, restaurant, "Restaurant created successfully.")
