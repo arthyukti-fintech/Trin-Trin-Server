@@ -10,6 +10,7 @@ const { resturantRouter } = require("./router/restaurantRouter");
 const { profileRouter } = require("./router/profileRouter");
 const { adminRouter } = require("./router/adminRouter");
 const { superAdminRouter } = require("./router/superAdminRouter");
+const { menuRouters } = require("./router/menuRouter");
 
 
 
@@ -62,10 +63,10 @@ app.use(cors(corsOptions));
 
 app.use("/auth", authRouter);
 app.use('/admin/queues', router);
-app.use("/api/restaurants", resturantRouter);
 app.use("/api", profileRouter);
 app.use("/restaurants", resturantRouter);
 app.use("/admin", adminRouter);
 app.use("/super-admin", superAdminRouter);
+app.use("/menu", menuRouters);
 
 module.exports = { app }

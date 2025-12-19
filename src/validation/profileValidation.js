@@ -17,3 +17,9 @@ exports.profileSchema = Joi.object({
             'string.empty': 'Expo push token cannot be empty string.',
         }),
 });
+
+exports.profileUpdateSchema = Joi.object({
+    name: Joi.string().min(2).max(50).optional(),
+    gender: Joi.string().valid("male", "female", "other").optional(),
+    email: Joi.string().email().optional(),
+});

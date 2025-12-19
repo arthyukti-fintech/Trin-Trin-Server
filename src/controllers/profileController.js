@@ -3,7 +3,7 @@ const { Profile } = require("../models/profile.model");
 const { ApiError } = require("../utils/apiError");
 const { ApiResponse } = require("../utils/apiResponse");
 const { asyncHandler } = require("../utils/asyncHandler");
-const { profileSchema } = require("../validation/profileValidation");
+const { profileSchema, profileUpdateSchema } = require("../validation/profileValidation");
 const { sendMobileNumberOTP } = require("../utils/sendOTP");
 
 const sendOpt = asyncHandler(async (req, res, next) => {
@@ -74,9 +74,37 @@ const getMyProfile = asyncHandler(async (req, res, next) => {
     );
 });
 
+const updateMyProfile = asyncHandler(async (req, res, next) => {
+    // const profile = req.Profile; // loaded from middleware
+    const userId = req.userId;
+    const profile = await Profile.findById(userId).select("-sessions -activityLog -ip -userAgent -os -accessToken ")
+    console.log(profile)
+
+    if (!profile) {
+        return next(new ApiError("Profile not found", 404));
+    }
+
+    // Validate request body
+    const { error, value } = profileUpdateSchema.validate(req.body);
+    if (error) {
+        return next(new ApiError(error.details[0].message, 400));
+    }
+
+    // Update allowed fields only
+    Object.keys(value).forEach((key) => {
+        profile[key] = value[key];
+    });
+
+    await profile.save();
+
+    return res.status(200).json(
+        new ApiResponse(200, profile, "Profile updated successfully")
+    );
+});
 
 module.exports = {
     loginProfile,
     getMyProfile,
-    sendOpt
+    sendOpt,
+    updateMyProfile
 }

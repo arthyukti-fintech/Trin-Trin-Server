@@ -7,6 +7,6 @@ const authRouter = express.Router({
     strict: true
 });
 
-authRouter.post("/login", sendOpt);
+authRouter.post("/login", loginProfile);
 
 module.exports = { authRouter };

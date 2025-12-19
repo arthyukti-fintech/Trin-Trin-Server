@@ -14,8 +14,8 @@ const loginAdminUser = asyncHandler(async (req, res, next) => {
     if (error) return next(new ApiError(error.details[0].message, 400));
 
     const { phoneNumber, password } = req.body;
-    const existProfile = await Profile.findOne({ phoneNumber });
 
+    const existProfile = await Profile.findOne({ phoneNumber });
     if (!existProfile) return next(new ApiError("Profile does not exist.", 400));
 
     const isPasswordValid = await existProfile.isCorrectPassword(password);

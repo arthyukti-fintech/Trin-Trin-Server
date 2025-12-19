@@ -115,3 +115,54 @@ exports.restaurantCreateSchema = Joi.object({
         "boolean.base": "isVegOnly must be a boolean value (true or false)."
     }),
 });
+
+exports.createResturantOwnerValidationScheme = Joi.object({
+    phoneNumber: Joi.string()
+        .pattern(/^\+91/)
+        .length(13)
+        .required()
+        .messages({
+            'string.empty': 'Phone number is required.',
+            'string.pattern.base': 'Phone number must be in the format +91XXXXXXXXXX',
+            'string.length': 'Phone number must be exactly 13 characters long with +91.',
+            'any.required': 'Phone number is required',
+        }),
+    fullName: Joi.string()
+        .required()
+        .messages({
+            'string.empty': 'User name is required',
+            'any.required': 'User name is required',
+        }),
+    password: Joi.string()
+        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
+        .required()
+        .messages({
+            'string.empty': 'Password is required.',
+            'string.pattern.base':
+                'Password must meet all of the following:\n' +
+                '- At least 8 characters long\n' +
+                '- At least one uppercase letter (A-Z)\n' +
+                '- At least one lowercase letter (a-z)\n' +
+                '- At least one number (0-9)\n' +
+                '- At least one special character (@$!%*?&)',
+            'any.required': 'Password is required.',
+        }),
+    dob: Joi.date()
+        .iso()
+        .less('now')
+        .optional()
+        .messages({
+            'date.base': 'Date of birth must be a valid date',
+            'date.format': 'Date of birth must be in ISO format (YYYY-MM-DD)',
+            'date.less': 'Date of birth must be in the past',
+        }),
+
+    email: Joi.string()
+        .email({ tlds: { allow: false } })
+        .required()
+        .messages({
+            "string.email": "Please enter a valid email address.",
+            "string.empty": "Email is required.",
+            "any.required": "Email is required.",
+        })
+});
