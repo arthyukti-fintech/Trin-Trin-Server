@@ -90,7 +90,6 @@ const updateMyProfile = asyncHandler(async (req, res, next) => {
     );
 });
 
-
 module.exports = {
     loginProfile,
     getMyProfile,

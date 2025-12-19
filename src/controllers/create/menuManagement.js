@@ -11,6 +11,7 @@ const createMenu = asyncHandler(async (req, res, next) => {
     const { name, price, isVeg } = req.body;
 
     console.log(restaurantId, "restaurantId")
+    console.log(userId, "userId")
 
     // 1. Check login
     if (!userId) {
