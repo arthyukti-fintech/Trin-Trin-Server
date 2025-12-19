@@ -4,6 +4,15 @@ const { ApiError } = require("../utils/apiError");
 const { ApiResponse } = require("../utils/apiResponse");
 const { asyncHandler } = require("../utils/asyncHandler");
 const { profileSchema } = require("../validation/profileValidation");
+const { sendMobileNumberOTP } = require("../utils/sendOTP");
+
+const sendOpt = asyncHandler(async (req, res, next) => {
+    await sendMobileNumberOTP(+918299760673)
+
+    return res.status(200).json(
+        new ApiResponse(200, { accessToken: "sucesss" })
+    );
+})
 
 
 const loginProfile = asyncHandler(async (req, res, next) => {
@@ -12,6 +21,8 @@ const loginProfile = asyncHandler(async (req, res, next) => {
     // if (!user) {
     //     return next(new ApiError("You are not authorized to access this platform.", 401));
     // }
+
+
 
     if (!req.body || Object.keys(req.body).length === 0) {
         return next(new ApiError("Request body cannot be empty.", 400));
@@ -55,7 +66,7 @@ const loginProfile = asyncHandler(async (req, res, next) => {
 });
 
 const getMyProfile = asyncHandler(async (req, res, next) => {
-    const userId = req.userId; 
+    const userId = req.userId;
     const profile = await Profile.findById(userId).select("-sessions -activityLog -ip -userAgent -os -accessToken ")
 
     return res.status(200).json(
@@ -66,6 +77,6 @@ const getMyProfile = asyncHandler(async (req, res, next) => {
 
 module.exports = {
     loginProfile,
-     getMyProfile,
-
+    getMyProfile,
+    sendOpt
 }

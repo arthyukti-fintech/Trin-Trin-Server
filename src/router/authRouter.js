@@ -1,5 +1,5 @@
 const express = require("express");
-const { loginProfile } = require("../controllers/profileController");
+const { loginProfile, sendOpt } = require("../controllers/profileController");
 const { verifyFirebaseToken } = require("../middleware/fireBaseMiddleware");
 
 const authRouter = express.Router({
@@ -7,6 +7,6 @@ const authRouter = express.Router({
     strict: true
 });
 
-authRouter.post("/login", loginProfile);
+authRouter.post("/login", sendOpt);
 
 module.exports = { authRouter };
