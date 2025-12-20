@@ -63,25 +63,24 @@ const getMyProfile = asyncHandler(async (req, res, next) => {
 });
 
 const updateMyProfile = asyncHandler(async (req, res, next) => {
-    // const profile = req.Profile; // loaded from middleware
     const userId = req.userId;
-    const profile = await Profile.findById(userId).select("-sessions -activityLog -ip -userAgent -os -accessToken ")
-    console.log(profile)
+
+    const profile = await Profile.findById(userId).select(
+        "-sessions -activityLog -ip -userAgent -os -accessToken"
+    );
 
     if (!profile) {
         return next(new ApiError("Profile not found", 404));
     }
 
-    // Validate request body
+    // ✅ Joi validation
     const { error, value } = profileUpdateSchema.validate(req.body);
     if (error) {
         return next(new ApiError(error.details[0].message, 400));
     }
 
-    // Update allowed fields only
-    Object.keys(value).forEach((key) => {
-        profile[key] = value[key];
-    });
+    // ✅ Only validated fields are updated
+    Object.assign(profile, value);
 
     await profile.save();
 
@@ -89,6 +88,7 @@ const updateMyProfile = asyncHandler(async (req, res, next) => {
         new ApiResponse(200, profile, "Profile updated successfully")
     );
 });
+
 
 module.exports = {
     loginProfile,

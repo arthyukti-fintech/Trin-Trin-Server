@@ -62,7 +62,7 @@ const ProfileSchema = new mongoose.Schema({
     },
     gender: {
         type: String,
-        enum: ["M", "F", "Others"],
+        enum: ["male", "female", "others"],
         default: null
     },
     referredCount: {
@@ -106,10 +106,10 @@ const ProfileSchema = new mongoose.Schema({
         type: String
     },
     createdViaAPI: {
-    type: Boolean,
-    default: false,
-    select: false 
-}
+        type: Boolean,
+        default: false,
+        select: false
+    }
 }, {
     timestamps: true,
 });
