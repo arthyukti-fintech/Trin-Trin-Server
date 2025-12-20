@@ -27,7 +27,6 @@ const createRestaurant = asyncHandler(async (req, res, next) => {
     }
 
     const { phoneNumber, name } = value;
-
     const existing = await Restaurant.findOne({
         $or: [
             { phoneNumber },
@@ -43,9 +42,7 @@ const createRestaurant = asyncHandler(async (req, res, next) => {
             )
         );
     }
-    console.log({ ...value, resturantOwner: userId })
     const restaurant = await Restaurant.create({ ...value, resturantOwner: userId });
-
 
     return res.status(201).json(
         new ApiResponse(201, restaurant, "Restaurant created successfully.")
@@ -90,6 +87,9 @@ const getAllResturants = asyncHandler(async (req, res, next) => {
     );
 
 })
+
+
+
 
 const getRestaurantById = asyncHandler(async (req, res, next) => {
 

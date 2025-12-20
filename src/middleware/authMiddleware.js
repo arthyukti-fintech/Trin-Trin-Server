@@ -20,15 +20,15 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
             return next(new ApiError("Profile not found", 401));
         }
 
-        const sessionExists = user.sessions?.some(
-            session => session.token === token
-        );
+        // const sessionExists = user.sessions?.some(
+        //     session => session.token === token
+        // );
 
-        if (!sessionExists) {
-            return next(
-                new ApiError("Session expired. Please login again.", 401)
-            );
-        }
+        // if (!sessionExists) {
+        //     return next(
+        //         new ApiError("Session expired. Please login again.", 401)
+        //     );
+        // }
 
         if (user.isActive === false) {
             return next(

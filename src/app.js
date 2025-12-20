@@ -63,7 +63,6 @@ app.use(cors(corsOptions));
 
 app.use("/auth", authRouter);
 app.use('/admin/queues', router);
-app.use("/api/restaurants", resturantRouter);
 app.use("/api", profileRouter);
 app.use("/restaurants", resturantRouter);
 app.use("/admin", adminRouter);

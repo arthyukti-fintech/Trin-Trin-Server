@@ -42,8 +42,8 @@ const ProfileSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['verified', 'premium', 'normal'],
-        default: 'normal',
+        enum: ['verified', 'premium', 'normal', "pending"],
+        default: 'pending',
     },
     role: {
         type: String,
@@ -56,9 +56,8 @@ const ProfileSchema = new mongoose.Schema({
     },
     referralCode: {
         type: String,
-        unique: true,
-        trim: true,
         uppercase: true,
+        default: null
     },
     gender: {
         type: String,
@@ -116,7 +115,7 @@ const ProfileSchema = new mongoose.Schema({
 
 ProfileSchema.index({ phoneNumber: 1 }, { unique: true, sparse: true });
 ProfileSchema.index({ email: 1 }, { unique: true, sparse: true });
-ProfileSchema.index({ referralCode: 1 }, { unique: true, sparse: true });
+ProfileSchema.index({ referralCode: 1 });
 ProfileSchema.index({ profileId: 1 }, { unique: true, sparse: true });
 ProfileSchema.index({ referredBy: 1 });
 ProfileSchema.index({ isActive: 1 });

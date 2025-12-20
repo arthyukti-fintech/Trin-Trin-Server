@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 
 const menuSchema = new mongoose.Schema(
@@ -8,38 +9,45 @@ const menuSchema = new mongoose.Schema(
             required: true,
             index: true,
         },
-
-        name: {
+        menuName: {
             type: String,
-            required: true,
             trim: true,
+            minlength: 2,
+            maxlength: 150,
         },
-
         description: {
             type: String,
             trim: true,
+            maxlength: 1000,
         },
-
         price: {
             type: Number,
-            required: true,
             min: 0,
         },
-
         isVeg: {
             type: Boolean,
             default: true,
         },
-
         category: {
-            type: String, // Starter, Main Course, Dessert, etc.
+            type: String,
             trim: true,
+            default: "Other",
         },
-
-        image: {
-            type: String, // URL
+        image: [
+            {
+                imageUrl:
+                {
+                    type: String,
+                    trim: true,
+                },
+                hash: { type: String, unique: true },
+            }
+        ],
+        maxMenuItems: {
+            type: Number,
+            default: null,
+            min: 1,
         },
-
         isAvailable: {
             type: Boolean,
             default: true,
@@ -48,4 +56,8 @@ const menuSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
-module.exports.Menu = mongoose.model("Menu", menuSchema);
+menuSchema.index({ restaurant: 1, menuName: 1 }, { unique: true });
+
+const Menu = mongoose.model("Menu", menuSchema);
+
+module.exports = { Menu };
