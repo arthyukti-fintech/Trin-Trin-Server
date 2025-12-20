@@ -88,6 +88,9 @@ const getAllResturants = asyncHandler(async (req, res, next) => {
 
 })
 
+
+
+
 const getRestaurantById = asyncHandler(async (req, res, next) => {
 
     const { id } = req.params;

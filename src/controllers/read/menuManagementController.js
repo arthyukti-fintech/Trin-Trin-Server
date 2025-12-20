@@ -15,6 +15,7 @@ const getAllMenuListOfResturantOwner = asyncHandler(async (req, res, next) => {
     }
 
     const menuList = await Menu.find({ restaurant: resturantDetails._id })
+    
 
 })
 
