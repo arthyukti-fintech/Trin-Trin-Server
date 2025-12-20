@@ -13,7 +13,6 @@ const { superAdminRouter } = require("./router/superAdminRouter");
 const { menuRouters } = require("./router/menuRouter");
 
 
-
 const app = express();
 
 app.use(express.json({ limit: "5mb" }));
