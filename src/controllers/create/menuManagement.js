@@ -96,9 +96,7 @@ const uploadMenuImages = asyncHandler(async (req, res, next) => {
   if (!mongoose.Types.ObjectId.isValid(restaurantId))
     return next(new ApiError("Invalid restaurant ID", 400));
 
-  const files = Array.isArray(req.files)
-    ? req.files
-    : Object.values(req.files).flat();
+  const files = req.files
 
   if (!files || files.length === 0)
     return next(new ApiError("No files uploaded", 400));
