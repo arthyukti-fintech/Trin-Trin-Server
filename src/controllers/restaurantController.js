@@ -4,6 +4,7 @@ const { ApiError } = require("../utils/apiError");
 const { ApiResponse } = require("../utils/apiResponse");
 const { asyncHandler } = require("../utils/asyncHandler");
 const { restaurantCreateSchema } = require("../validation/restaurantValidation");
+const { Menu } = require("../models/menu.model");
 
 const createRestaurant = asyncHandler(async (req, res, next) => {
     const userId = req.userId;
@@ -100,11 +101,10 @@ const getAllResturants = asyncHandler(async (req, res, next) => {
             "Restaurants fetched successfully"
         )
     );
-});
 
+})
 
 const getRestaurantById = asyncHandler(async (req, res, next) => {
-
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return next(new ApiError("Invalid account ID.", 400));

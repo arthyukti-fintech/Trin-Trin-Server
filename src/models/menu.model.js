@@ -11,9 +11,6 @@ const menuSchema = new mongoose.Schema(
         },
         menuName: {
             type: String,
-            trim: true,
-            minlength: 2,
-            maxlength: 150,
         },
         description: {
             type: String,
@@ -54,9 +51,8 @@ const menuSchema = new mongoose.Schema(
         },
     },
     { timestamps: true }
-);
-
-menuSchema.index({ restaurant: 1, menuName: 1 }, { unique: true });
+)
+menuSchema.index({ restaurant: 1 });
 
 const Menu = mongoose.model("Menu", menuSchema);
 
