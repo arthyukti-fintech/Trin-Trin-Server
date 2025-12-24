@@ -165,25 +165,25 @@ const uploadMenuImages = asyncHandler(async (req, res, next) => {
     .json(new ApiResponse(201, newMenu, "Menu created successfully"));
 });
 
-const getMenusByRestaurant = asyncHandler(async (req, res, next) => {
-  const { restaurantId } = req.params;
+// const getMenusByRestaurant = asyncHandler(async (req, res, next) => {
+//   const { restaurantId } = req.params;
 
-  if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
-    return next(new ApiError("Invalid restaurant ID.", 400));
-  }
+//   if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
+//     return next(new ApiError("Invalid restaurant ID.", 400));
+//   }
 
-  const menus = await Menu.find({ restaurant: restaurantId }).sort({
-    createdAt: -1,
-  });
+//   const menus = await Menu.find({ restaurant: restaurantId }).sort({
+//     createdAt: -1,
+//   });
 
-  if (!menus.length) {
-    return next(new ApiError("No menu items found.", 404));
-  }
+//   if (!menus.length) {
+//     return next(new ApiError("No menu items found.", 404));
+//   }
 
-  return res
-    .status(200)
-    .json(new ApiResponse(200, menus, "Menus fetched successfully"));
-});
+//   return res
+//     .status(200)
+//     .json(new ApiResponse(200, menus, "Menus fetched successfully"));
+// });
 
 const updateMenu = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
@@ -227,7 +227,6 @@ const deleteMenu = asyncHandler(async (req, res, next) => {
 module.exports = {
   createMenu,
   uploadMenuImages,
-  getMenusByRestaurant,
   updateMenu,
   deleteMenu,
 };
