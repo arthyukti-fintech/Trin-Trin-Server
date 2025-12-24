@@ -13,8 +13,8 @@ resturantRouter.get("/read/profile", resturantOwnerMiddleware, readResturantOwne
 resturantRouter.post("/create", resturantOwnerMiddleware, createRestaurant);
 
 resturantRouter.get("/getall", authMiddleware, getAllResturants);
-resturantRouter.get("/getall/:id", adminMiddleware, getRestaurantById);
-resturantRouter.patch("/update/:id", adminMiddleware, updateRestaurant);
+resturantRouter.get("/getall/:id", authMiddleware, getRestaurantById);
+resturantRouter.patch("/update/:id", authMiddleware, updateRestaurant);
 resturantRouter.delete("/delete/:id", adminMiddleware, deleteRestaurant);
 
 module.exports = { resturantRouter }

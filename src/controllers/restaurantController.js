@@ -50,8 +50,9 @@ const createRestaurant = asyncHandler(async (req, res, next) => {
 });
 
 const getAllResturants = asyncHandler(async (req, res, next) => {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 30;
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = parseInt(req.query.limit, 10) || 30;
+    const search = req.query.search?.trim();
 
     if (page < 1 || limit < 1) {
         return next(new ApiError("Page and limit must be positive numbers.", 400));
@@ -59,36 +60,47 @@ const getAllResturants = asyncHandler(async (req, res, next) => {
 
     const skip = (page - 1) * limit;
 
+    // 🔍 Build search filter
+    const filter = {};
+
+    if (search) {
+        filter.$or = [
+            { name: { $regex: search, $options: "i" } },
+            { "address.city": { $regex: search, $options: "i" } },
+            { cuisine: { $regex: search, $options: "i" } },
+        ];
+    }
+
     const [restaurants, total] = await Promise.all([
-        Restaurant.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
-        Restaurant.countDocuments()
-    ])
+        Restaurant.find(filter)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit),
+        Restaurant.countDocuments(filter),
+    ]);
 
     if (!restaurants || restaurants.length === 0) {
         return next(new ApiError("No restaurants found.", 404));
     }
 
-    if (!restaurants || restaurants.length === 0) {
-        return next(new ApiError("No restaurants found.", 404));
-    }
-
-    const totalPages = Math.ceil(total / limit)
+    const totalPages = Math.ceil(total / limit);
 
     return res.status(200).json(
-        new ApiResponse(200, {
-            restaurants,
-            pagination: {
-                total,
-                totalPages,
-                currentPage: page,
-                perPage: limit,
+        new ApiResponse(
+            200,
+            {
+                restaurants,
+                pagination: {
+                    total,
+                    totalPages,
+                    currentPage: page,
+                    perPage: limit,
+                },
             },
-        }, "Restaurants fetched successfully")
+            "Restaurants fetched successfully"
+        )
     );
-
-})
-
-
+});
 
 
 const getRestaurantById = asyncHandler(async (req, res, next) => {
