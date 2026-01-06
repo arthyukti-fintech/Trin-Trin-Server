@@ -5,6 +5,7 @@ const { authMiddleware } = require("../middleware/authMiddleware");
 const { resturantOwnerMiddleware } = require("../middleware/resturantOwnerMiddleware");
 const { upload } = require("../middleware/multer.middleware");
 const { getAllMenuListOfSingleResturant } = require("../controllers/read/menuManagementController");
+const { deleteMenuOfRestaurant } = require("../controllers/delete/menuManagementController");
 const menuRouters = express.Router()
 
 
@@ -12,6 +13,8 @@ const menuRouters = express.Router()
 menuRouters.post("/create/:restaurantId/menus", resturantOwnerMiddleware, createMenu);
 menuRouters.post("/upload/:restaurantId/menu-images", resturantOwnerMiddleware, upload.array("images", 10), uploadMenuImages);
 menuRouters.get("/read/:restaurantId", getAllMenuListOfSingleResturant);
+menuRouters.delete("/delete/menu-item/:resturantId/:menuId",resturantOwnerMiddleware, deleteMenuOfRestaurant);
+
 
 // menuRouters.patch("/:id", updateMenu);
 // menuRouters.delete("/:id", deleteMenu);

@@ -69,9 +69,6 @@ const getAllResturants = asyncHandler(async (req, res, next) => {
         return next(new ApiError("No restaurants found.", 404));
     }
 
-    if (!restaurants || restaurants.length === 0) {
-        return next(new ApiError("No restaurants found.", 404));
-    }
 
     const totalPages = Math.ceil(total / limit)
 
@@ -90,22 +87,6 @@ const getAllResturants = asyncHandler(async (req, res, next) => {
 })
 
 
-const getRestaurantById = asyncHandler(async (req, res, next) => {
-    const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return next(new ApiError("Invalid account ID.", 400));
-    }
-
-    const restaurant = await Restaurant.findById(id).lean();
-
-    if (!restaurant) {
-        return next(new ApiError("Restaurant not found with the provided ID.", 404));
-    }
-
-    return res
-        .status(200)
-        .json(new ApiResponse(200, restaurant, "Restaurant fetched successfully"));
-});
 
 const updateRestaurant = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
@@ -160,4 +141,4 @@ const deleteRestaurant = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(200, null, "Restaurant deleted successfully"));
 });
 
-module.exports = { createRestaurant, getAllResturants, getRestaurantById, updateRestaurant, deleteRestaurant };
+module.exports = { createRestaurant, getAllResturants, updateRestaurant, deleteRestaurant };
