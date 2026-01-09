@@ -3,7 +3,6 @@ const { Restaurant } = require("../../models/restaurant.model");
 const { ApiError } = require("../../utils/apiError");
 const { asyncHandler } = require("../../utils/asyncHandler");
 const { Menu } = require("../../models/menu.model");
-const { uploadOnCloudinary } = require("../../utils/cloudinary");
 const { ApiResponse } = require("../../utils/apiResponse");
 
 const deleteMenuOfRestaurant = asyncHandler(async (req, res, next) => {
@@ -52,4 +51,67 @@ const deleteMenuOfRestaurant = asyncHandler(async (req, res, next) => {
   );
 });
 
-module.exports = { deleteMenuOfRestaurant }
+const deleteMenuImage = asyncHandler(async (req, res, next) => {
+  const userId = req.userId;
+  const { restaurantId, imageId } = req.params;
+
+  if (
+    !mongoose.Types.ObjectId.isValid(restaurantId) ||
+    !mongoose.Types.ObjectId.isValid(imageId)
+  ) {
+    return next(new ApiError("Invalid restaurant ID or image ID.", 400));
+  }
+
+  const restaurant = await Restaurant.findById(restaurantId);
+  if (!restaurant) {
+    return next(new ApiError("Restaurant not found.", 404));
+  }
+
+  if (!restaurant.isActive) {
+    return next(new ApiError("Your restaurant account is inactive.", 403));
+  }
+
+  if (restaurant.resturantOwner.toString() !== userId.toString()) {
+    return next(
+      new ApiError("You are not authorized to modify this menu.", 403)
+    );
+  }
+
+  const menu = await Menu.findOne({ restaurant: restaurantId });
+  if (!menu) {
+    return next(new ApiError("Menu not found for this restaurant.", 404));
+  }
+
+  const imageIndex = menu.image.findIndex(
+    (img) => img._id.toString() === imageId
+  );
+
+  if (imageIndex === -1) {
+    return next(new ApiError("Menu image not found.", 404));
+  }
+
+  const image = menu.image[imageIndex];
+
+  if (image.hash) {
+    try {
+      await cloudinary.uploader.destroy(image.hash);
+      console.log(`✅ Deleted Cloudinary image: ${image.hash}`);
+    } catch (err) {
+      console.error(
+        `❌ Failed to delete Cloudinary image (${image.hash})`,
+        err.message
+      );
+    }
+  }
+
+  menu.image.splice(imageIndex, 1);
+  await menu.save();
+
+  return res.status(200).json(
+    new ApiResponse(200, menu, "Menu image deleted successfully.")
+  );
+});
+
+
+
+module.exports = { deleteMenuOfRestaurant,deleteMenuImage }

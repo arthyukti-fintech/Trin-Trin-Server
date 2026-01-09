@@ -59,7 +59,7 @@ const createMenu = asyncHandler(async (req, res, next) => {
     );
   }
 
-  const { menuName, price, isVeg, description, category, maxMenuItems } =
+  const { menuName, price, isVeg, description, category, stock } =
     req.body;
 
   const existingMenu = await Menu.findOne({
@@ -79,7 +79,7 @@ const createMenu = asyncHandler(async (req, res, next) => {
     isVeg,
     description,
     category,
-    maxMenuItems,
+    stock,
     restaurant: restaurantId,
   });
 
@@ -96,8 +96,7 @@ const uploadMenuImages = asyncHandler(async (req, res, next) => {
   if (!mongoose.Types.ObjectId.isValid(restaurantId))
     return next(new ApiError("Invalid restaurant ID", 400));
 
-  const files = req.files
-
+  const files = req.files;
   if (!files || files.length === 0)
     return next(new ApiError("No files uploaded", 400));
 
@@ -120,22 +119,25 @@ const uploadMenuImages = asyncHandler(async (req, res, next) => {
   for (const file of files) {
     try {
       const fileHash = await getFileHash(file.path);
-      const existingMenu = await Menu.findOne({ "image.hash": fileHash });
 
-      if (existingMenu) {
+      const existingMenuWithImage = await Menu.findOne({
+        restaurant: restaurantId,
+        "image.hash": fileHash
+      });
+
+      if (existingMenuWithImage) {
         await fs.promises.unlink(file.path);
-        continue; // skip duplicate
+        continue;
       }
 
       const cloudinaryResult = await uploadOnCloudinary(file.path);
-
       if (!cloudinaryResult?.secure_url) {
         throw new Error("Cloudinary upload failed");
       }
 
       uploadedImages.push({
         imageUrl: cloudinaryResult.secure_url,
-        hash: fileHash,
+        hash: fileHash
       });
     } catch (err) {
       console.error("File processing error:", err);
@@ -152,16 +154,27 @@ const uploadMenuImages = asyncHandler(async (req, res, next) => {
     );
   }
 
-  // Create new Menu
+  let menu = await Menu.findOne({ restaurant: restaurantId });
+
+  if (menu) {
+    menu.image.push(...uploadedImages);
+    await menu.save();
+
+    return res.status(200).json(
+      new ApiResponse(200, menu, "Menu updated successfully")
+    );
+  }
+
   const newMenu = await Menu.create({
-    image: uploadedImages,
     restaurant: restaurantId,
+    image: uploadedImages
   });
 
-  return res
-    .status(201)
-    .json(new ApiResponse(201, newMenu, "Menu created successfully"));
+  return res.status(201).json(
+    new ApiResponse(201, newMenu, "Menu created successfully")
+  );
 });
+
 
 // const getMenusByRestaurant = asyncHandler(async (req, res, next) => {
 //   const { restaurantId } = req.params;

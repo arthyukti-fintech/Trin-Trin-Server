@@ -35,7 +35,7 @@ exports.createMenuValidationSchema = Joi.object({
         .optional()
         .default("Other"),
 
-    maxMenuItems: Joi.number()
+    stock: Joi.number()
         .integer()
         .min(1)
         .allow(null),

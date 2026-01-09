@@ -40,9 +40,9 @@ const menuSchema = new mongoose.Schema(
                 hash: { type: String, unique: true },
             }
         ],
-        maxMenuItems: {
+        stock: {
             type: Number,
-            default: null,
+            default: 1000,
             min: 1,
         },
         isAvailable: {

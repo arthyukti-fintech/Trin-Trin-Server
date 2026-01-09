@@ -4,18 +4,14 @@ const path = require('path');
 const dotenv = require('dotenv');
 const redis = require('../utils/redisClient');
 
-const { MenuItem } = require('../models/MenuItem');
 const { Order } = require('../models/Order');
 const { emitOrderPlaced, emitAvailabilityChange } = require('../sockets/emitter');
+const { Menu } = require('../models/menu.model');
 
-// ✅ Load environment variables
 dotenv.config({
   path: path.resolve(process.cwd(), `.env.${process.env.NODE_ENV || 'development'}`),
 });
 
-console.log("📦 MONGO_URI:", process.env.MONGO_URI);
-
-// ✅ Connect MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.error('❌ MongoDB connection error:', err));
@@ -28,9 +24,8 @@ const worker = new Worker('orderQueue', async job => {
 
   try {
     const orderedItems = [];
-
     for (const item of items) {
-      const menuItem = await MenuItem.findOneAndUpdate(
+      const menuItem = await Menu.findOneAndUpdate(
         {
           _id: item.itemId,
           stock: { $gte: item.quantity },
@@ -44,17 +39,17 @@ const worker = new Worker('orderQueue', async job => {
         throw new Error(`Not enough stock for item ${item.itemId}`);
       }
 
-      if (menuItem.stock === 0 && menuItem.available !== false) {
-        // Only mark unavailable if it's not already
-        menuItem.available = false;
+      if (menuItem.stock === 0 && menuItem.isAvailable !== false) {
+        menuItem.isAvailable = false;
         await menuItem.save({ session });
-
         emitAvailabilityChange(menuItem._id, false);
       }
 
       orderedItems.push({
         item: item.itemId,
         quantity: item.quantity,
+        itemName: item.itemName
+
       });
     }
 
