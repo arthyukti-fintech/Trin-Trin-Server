@@ -37,7 +37,7 @@ const adminMiddleware = asyncHandler(async (req, res, next) => {
         req.userId = user._id;
         next();
     } catch (error) {
-        return next(new ApiError("Invalid or expired token", 401));
+        return next(new ApiError(error||"Invalid or expired token", 401));
     }
 
 })

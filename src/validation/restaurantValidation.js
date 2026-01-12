@@ -166,3 +166,60 @@ exports.createResturantOwnerValidationScheme = Joi.object({
             "any.required": "Email is required.",
         })
 });
+
+exports.orderValidationSchema = Joi.object({
+    userId: Joi.string()
+        .trim()
+        .required()
+        .messages({
+            "string.base": "User ID must be a string",
+            "string.empty": "User ID is required",
+            "any.required": "User ID is required"
+        }),
+
+    timeSlot: Joi.date()
+        .optional()
+        .messages({
+            "date.base": "Time slot must be a valid date"
+        }),
+
+    items: Joi.array()
+        .items(
+            Joi.object({
+                itemId: Joi.string()
+                    .required()
+                    .messages({
+                        "string.base": "Item ID must be a string",
+                        "string.empty": "Item ID is required",
+                        "any.required": "Item ID is required"
+                    }),
+
+                quantity: Joi.number()
+                    .integer()
+                    .min(1)
+                    .required()
+                    .messages({
+                        "number.base": "Quantity must be a number",
+                        "number.integer": "Quantity must be an integer",
+                        "number.min": "Quantity must be at least 1",
+                        "any.required": "Quantity is required"
+                    }),
+
+                itemName: Joi.string()
+                    .trim()
+                    .required()
+                    .messages({
+                        "string.base": "Item name must be a string",
+                        "string.empty": "Item name is required",
+                        "any.required": "Item name is required"
+                    })
+            })
+        )
+        .min(1)
+        .required()
+        .messages({
+            "array.base": "Items must be an array",
+            "array.min": "At least one item is required",
+            "any.required": "Items are required"
+        })
+});

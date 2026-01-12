@@ -3,10 +3,12 @@ const mongoose = require('mongoose');
 const orderSchema = new mongoose.Schema({
     userId: String,
     timeSlot: Date,
+    restaurant: { type: mongoose.Schema.Types.ObjectId, ref: 'Restaurant' },
     items: [
         {
             item: { type: mongoose.Schema.Types.ObjectId, ref: 'MenuItem' },
-            quantity: Number
+            quantity: Number,
+            itemName: String
         }
     ],
     status: {

@@ -7,8 +7,8 @@ const testRouter = express.Router({
     strict: true
 });
 
-testRouter.post("/orders", queueOrder);
-testRouter.post("/menus", createMenuItem);
-testRouter.get("/menus", getAvailableMenu);
+// testRouter.post("/orders", queueOrder);
+// testRouter.post("/menus", createMenuItem);
+// testRouter.get("/menus", getAvailableMenu);
 
 module.exports = { testRouter };

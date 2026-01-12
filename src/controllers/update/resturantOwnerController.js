@@ -55,44 +55,9 @@ const createRestaurantOwnerAccount = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(201, { accessToken }, "Your restaurant owner account has been created successfully and is pending administrative approval."));
 })
 
-const readResturantOwnerProfile = asyncHandler(async (req, res, next) => {
-    const userId = req.userId;
-    if (!userId) {
-        return next(new ApiError("Unauthorized access. Please login first.", 401));
-    }
-
-    const profile = await Profile.findById(userId).select("-sessions -activityLog -ip -userAgent -os -accessToken ")
-
-
-    if (!profile) {
-        return next(new ApiError("Profile not found.", 404));
-    }
-
-    if (profile.status === "pending") {
-        return next(
-            new ApiError(
-                "Your account is currently under review. Please wait for admin approval.",
-                404
-            )
-        );
-    }
-
-    if (profile.status === "rejected") {
-        return next(
-            new ApiError(
-                "Your account request has been rejected. Please contact support.",
-                404
-            )
-        );
-    }
-    return res.status(200).json(
-        new ApiResponse(200, profile, "Profile fetched successfully.")
-    );
-
-})
 
 
 
 
 
-module.exports = { createRestaurantOwnerAccount, readResturantOwnerProfile }
+module.exports = { createRestaurantOwnerAccount }

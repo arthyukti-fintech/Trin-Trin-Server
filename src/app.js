@@ -11,6 +11,8 @@ const { profileRouter } = require("./router/profileRouter");
 const { adminRouter } = require("./router/adminRouter");
 const { superAdminRouter } = require("./router/superAdminRouter");
 const { menuRouters } = require("./router/menuRouter");
+const { commanRouter } = require("./router/commanRouter");
+const { orderRouter } = require("./router/orderRouter");
 
 
 const app = express();
@@ -67,5 +69,7 @@ app.use("/restaurants", resturantRouter);
 app.use("/admin", adminRouter);
 app.use("/super-admin", superAdminRouter);
 app.use("/menu", menuRouters);
+app.use("/comman", commanRouter);
+app.use("/order", orderRouter)
 
 module.exports = { app }
