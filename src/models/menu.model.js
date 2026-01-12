@@ -54,13 +54,12 @@ const menuSchema = new mongoose.Schema(
 );
 
 menuSchema.index(
-  { restaurant: 1, menuName: 1 },
-  {
-    unique: true,
-    partialFilterExpression: { menuName: { $exists: true, $ne: null } },
-  }
+    { restaurant: 1, menuName: 1 },
+    {
+        unique: true,
+        partialFilterExpression: { menuName: { $exists: true, $ne: null } },
+    }
 );
-
 
 const Menu = mongoose.model("Menu", menuSchema);
 
