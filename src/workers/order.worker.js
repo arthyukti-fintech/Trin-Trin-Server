@@ -17,7 +17,7 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
 const worker = new Worker('orderQueue', async job => {
-  const { userId, items, timeSlot } = job.data;
+  const { userId, items, timeSlot, restaurantId } = job.data;
 
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -57,6 +57,7 @@ const worker = new Worker('orderQueue', async job => {
       [{
         user: userId,
         items: orderedItems,
+        restaurant:restaurantId,
         timeSlot,
         status: 'confirmed',
       }],

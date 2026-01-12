@@ -1,19 +1,18 @@
-const { default: mongoose } = require("mongoose");
-const { Profile } = require("../models/profile.model");
-const { ApiError } = require("../utils/apiError");
-const { ApiResponse } = require("../utils/apiResponse");
-const { asyncHandler } = require("../utils/asyncHandler");
-const { profileSchema, profileUpdateSchema } = require("../validation/profileValidation");
-const { sendMobileNumberOTP } = require("../utils/sendOTP");
+const {default: mongoose} = require("mongoose");
+const {Profile} = require("../models/profile.model");
+const {ApiError} = require("../utils/apiError");
+const {ApiResponse} = require("../utils/apiResponse");
+const {asyncHandler} = require("../utils/asyncHandler");
+const {profileSchema, profileUpdateSchema} = require("../validation/profileValidation");
+const {sendMobileNumberOTP} = require("../utils/sendOTP");
 
 const sendOpt = asyncHandler(async (req, res, next) => {
     await sendMobileNumberOTP(+918299760673)
 
     return res.status(200).json(
-        new ApiResponse(200, { accessToken: "sucesss" })
+        new ApiResponse(200, {accessToken: "sucesss"})
     );
 })
-
 
 const loginProfile = asyncHandler(async (req, res, next) => {
     // const user = req.user;
@@ -23,17 +22,16 @@ const loginProfile = asyncHandler(async (req, res, next) => {
     // }
 
 
-
     if (!req.body || Object.keys(req.body).length === 0) {
         return next(new ApiError("Request body cannot be empty.", 400));
     }
 
-    const { error } = profileSchema.validate(req.body);
+    const {error} = profileSchema.validate(req.body);
     if (error) {
         console.log(error)
         return next(new ApiError(error.details[0].message, 400));
     }
-    const { phoneNumber, expoToken } = req.body;
+    const {phoneNumber, expoToken} = req.body;
 
     // if (phoneNumber !== user.phoneNumber) {
     //     return next(new ApiError("Your credentials do not match.", 401));
@@ -45,10 +43,10 @@ const loginProfile = asyncHandler(async (req, res, next) => {
     const ipv4 = ip.replace('::ffff:', '');
     const os = req.useragent?.os || "Unknown";
 
-    let profile = await Profile.findOne({ phoneNumber });
+    let profile = await Profile.findOne({phoneNumber});
 
     if (!profile) {
-        profile = new Profile({ phoneNumber });
+        profile = new Profile({phoneNumber});
     }
     profile.ip = ipv4;
     profile.userAgent = userAgent;
@@ -57,10 +55,10 @@ const loginProfile = asyncHandler(async (req, res, next) => {
     const newToken = await profile.generateAccessToken();
     profile.accessToken = newToken;
 
-    await profile.save({ validateBeforeSave: false });
+    await profile.save({validateBeforeSave: false});
 
     return res.status(200).json(
-        new ApiResponse(200, { accessToken: newToken })
+        new ApiResponse(200, {accessToken: newToken})
     );
 
 });
@@ -85,7 +83,7 @@ const updateMyProfile = asyncHandler(async (req, res, next) => {
     }
 
     // Validate request body
-    const { error, value } = profileUpdateSchema.validate(req.body);
+    const {error, value} = profileUpdateSchema.validate(req.body);
     if (error) {
         return next(new ApiError(error.details[0].message, 400));
     }

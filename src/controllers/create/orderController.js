@@ -1,3 +1,4 @@
+const { Restaurant } = require("../../models/restaurant.model");
 const orderQueue = require("../../queues/order.queue");
 const { ApiError } = require("../../utils/apiError");
 const { ApiResponse } = require("../../utils/apiResponse");
@@ -5,6 +6,7 @@ const { asyncHandler } = require("../../utils/asyncHandler");
 const { orderValidationSchema } = require("../../validation/restaurantValidation");
 
 const queueOrderOfMenuItems = asyncHandler(async (req, res, next) => {
+    const userId = req.userId
     if (!req.body || Object.keys(req.body).length === 0) {
         return next(new ApiError("Request body cannot be empty.", 400));
     }
@@ -16,14 +18,15 @@ const queueOrderOfMenuItems = asyncHandler(async (req, res, next) => {
     }
 
 
-    const { userId, items, timeSlot } = req.body;
+    const { items, timeSlot } = req.body;
 
-    if (!userId || !Array.isArray(items) || items.length === 0) {
+    if (!req.body.userId || !Array.isArray(items) || items.length === 0) {
         return next(new ApiError("Invalid order format.", 400));
     }
-
+    const restaurant = await Restaurant.findOne({ resturantOwner: userId })
     const job = await orderQueue.add("new-order", {
-        userId,
+        userId: req.body.userId,
+        restaurantId: restaurant._id,
         items,
         timeSlot: timeSlot || new Date(),
     });

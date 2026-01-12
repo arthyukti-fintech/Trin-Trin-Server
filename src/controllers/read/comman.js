@@ -4,6 +4,7 @@ const { ApiError } = require("../../utils/apiError");
 const { ApiResponse } = require("../../utils/apiResponse");
 const { asyncHandler } = require("../../utils/asyncHandler");
 const { Profile } = require("../../models/profile.model");
+const { Order } = require("../../models/Order");
 
 const readDashboardProfile = asyncHandler(async (req, res, next) => {
     const userId = req.userId;
@@ -104,4 +105,75 @@ const getRestaurantById = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(200, restaurant, "Restaurant fetched successfully"));
 });
 
-module.exports = { getAllResturantsRoleBase, readDashboardProfile, getRestaurantById }
+const getAllOrderList = asyncHandler(async (req, res, next) => {
+    const userId = req.userId;
+    const role = req.role;
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 30;
+    const search = req.query.search || "";
+    const status = req.query.status || "";
+
+    const skip = (page - 1) * limit;
+
+    let matchStage = {};
+
+    if (role === "resturantsOwner") {
+        const restaurant = await Restaurant.findOne({ resturantOwner: userId });
+        if (!restaurant) {
+            return next(new ApiError("Restaurant not found", 404));
+        }
+        matchStage.restaurant = new mongoose.Types.ObjectId(restaurant._id);
+    } else if (role !== "admin" && role !== "superAdmin") {
+        return next(
+            new ApiError(
+                "Unauthorized access. Access allowed only to Admin or RestaurantOwner",
+                403
+            )
+        );
+    }
+
+
+    if (search) {
+        matchStage["items.itemName"] = {
+            $regex: search,
+            $options: "i",
+        };
+    }
+
+    if (status) {
+        matchStage.status = status;
+    }
+
+    const total = await Order.countDocuments(matchStage);
+
+    const orderList = await Order.aggregate([
+        { $match: matchStage },
+        { $sort: { createdAt: -1 } },
+        { $skip: skip },
+        { $limit: limit },
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            {
+                orderList,
+                pagination: {
+                    total,
+                    totalPages,
+                    currentPage: page,
+                    perPage: limit,
+                },
+            },
+            "Order list fetched successfully"
+        )
+    );
+});
+
+
+
+
+module.exports = { getAllResturantsRoleBase, readDashboardProfile, getRestaurantById, getAllOrderList }
