@@ -48,7 +48,8 @@ const worker = new Worker('orderQueue', async job => {
       orderedItems.push({
         item: item.itemId,
         quantity: item.quantity,
-        itemName: item.itemName
+        itemName: item.itemName,
+        price: item.price
 
       });
     }
