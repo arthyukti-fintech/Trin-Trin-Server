@@ -87,6 +87,7 @@ const getAllResturants = asyncHandler(async (req, res, next) => {
 })
 
 const updateRestaurant = asyncHandler(async (req, res, next) => {
+    const role = req.role;
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return next(new ApiError("Invalid account ID.", 400));
@@ -94,6 +95,10 @@ const updateRestaurant = asyncHandler(async (req, res, next) => {
 
     if (!req.body || Object.keys(req.body).length === 0) {
         return next(new ApiError("Request body is empty. Nothing to update.", 400));
+    }
+
+    if (role !== "resturantsOwner" && role !== "admin" && role !== "superAdmin") {
+        return next(new ApiError("You are not allowed to access this platform.", 403));
     }
 
     const { error, value } = restaurantCreateSchema
