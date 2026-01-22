@@ -4,6 +4,7 @@ const { adminMiddleware } = require("../middleware/adminMiddleware");
 const { createRestaurantOwnerAccount } = require("../controllers/update/resturantOwnerController");
 const { resturantOwnerMiddleware } = require("../middleware/resturantOwnerMiddleware");
 const { authMiddleware } = require("../middleware/authMiddleware");
+const { commanMiddleware } = require("../middleware/commanMiddleware");
 
 const resturantRouter = express.Router()
 
@@ -11,7 +12,7 @@ const resturantRouter = express.Router()
 resturantRouter.post("/auth/signup", createRestaurantOwnerAccount);
 resturantRouter.post("/create", resturantOwnerMiddleware, createRestaurant);
 resturantRouter.get("/getall", authMiddleware, getAllResturants);
-resturantRouter.patch("/update/:id", adminMiddleware, updateRestaurant);
+resturantRouter.patch("/update/:id", commanMiddleware, updateRestaurant);
 resturantRouter.delete("/delete/:id", adminMiddleware, deleteRestaurant);
 
 module.exports = { resturantRouter }

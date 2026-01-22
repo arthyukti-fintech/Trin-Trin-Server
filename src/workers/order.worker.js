@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 const redis = require('../utils/redisClient');
 
 const { Order } = require('../models/Order');
-const { emitOrderPlaced, emitAvailabilityChange } = require('../sockets/emitter');
+const { emitOrderPlaced, emitAvailabilityChange, failedTopPlacedOrder } = require('../sockets/emitter');
 const { Menu } = require('../models/menu.model');
 
 dotenv.config({
@@ -17,7 +17,8 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
 const worker = new Worker('orderQueue', async job => {
-  const { userId, items, timeSlot, restaurantId } = job.data;
+  const { userId, items, timeSlot, restaurantId, resturantUserId } = job.data;
+
 
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -36,6 +37,7 @@ const worker = new Worker('orderQueue', async job => {
         { new: true, session }
       );
       if (!menuItem) {
+        failedTopPlacedOrder(userId,resturantUserId, item)
         throw new Error(`Not enough stock for item ${item.itemId}`);
       }
 
@@ -48,7 +50,8 @@ const worker = new Worker('orderQueue', async job => {
       orderedItems.push({
         item: item.itemId,
         quantity: item.quantity,
-        itemName: item.itemName
+        itemName: item.itemName,
+        price: item.price
 
       });
     }
@@ -57,7 +60,7 @@ const worker = new Worker('orderQueue', async job => {
       [{
         user: userId,
         items: orderedItems,
-        restaurant:restaurantId,
+        restaurant: restaurantId,
         timeSlot,
         status: 'confirmed',
       }],

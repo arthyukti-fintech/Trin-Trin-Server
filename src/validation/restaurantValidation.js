@@ -204,6 +204,16 @@ exports.orderValidationSchema = Joi.object({
                         "number.min": "Quantity must be at least 1",
                         "any.required": "Quantity is required"
                     }),
+                price: Joi.number()
+                    .integer()
+                    .min(0)
+                    .required()
+                    .messages({
+                        "number.base": "Price must be a number",
+                        "number.integer": "Price must be an integer",
+                        "number.min": "Price must be at least 1",
+                        "any.required": "Price is required"
+                    }),
 
                 itemName: Joi.string()
                     .trim()
