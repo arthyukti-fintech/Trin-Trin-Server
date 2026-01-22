@@ -108,7 +108,6 @@ const getAllResturants = asyncHandler(async (req, res, next) => {
 
 })
 
-
 const updateRestaurant = asyncHandler(async (req, res, next) => {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -162,4 +161,4 @@ const deleteRestaurant = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(200, null, "Restaurant deleted successfully"));
 });
 
-module.exports = { createRestaurant, getAllResturants, getRestaurantById, updateRestaurant, deleteRestaurant };
+module.exports = { createRestaurant, getAllResturants, updateRestaurant, deleteRestaurant };
