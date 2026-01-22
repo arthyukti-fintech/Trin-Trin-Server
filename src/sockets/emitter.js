@@ -14,3 +14,10 @@ exports.emitOrderPlaced = (order) => {
   const io = getIO();
   io.emit('orderPlaced', order);
 };
+
+
+exports.failedTopPlacedOrder = (userId,resturantUserId, item) => {
+  const io = getIO();
+  io.to(userId.toString()).emit("failedToPlacedOrder", item);
+  io.to(resturantUserId.toString()).emit("failedToPlacedOrder", item);
+};

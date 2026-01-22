@@ -27,6 +27,7 @@ const queueOrderOfMenuItems = asyncHandler(async (req, res, next) => {
     const job = await orderQueue.add("new-order", {
         userId: req.body.userId,
         restaurantId: restaurant._id,
+        resturantUserId: userId,
         items,
         timeSlot: timeSlot || new Date(),
     });

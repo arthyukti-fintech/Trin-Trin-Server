@@ -69,9 +69,9 @@ const getAllResturantsRoleBase = asyncHandler(async (req, res, next) => {
         { $limit: limit }
     ]);
 
-    if (!restaurants || restaurants.length === 0) {
-        return next(new ApiError("No restaurants found.", 404));
-    }
+    // if (!restaurants || restaurants.length === 0) {
+    //     return next(new ApiError("No restaurants found.", 404));
+    // }
 
     const totalPages = Math.ceil(total / limit)
     return res.status(200).json(

@@ -22,7 +22,7 @@ const restaurantSchema = new mongoose.Schema(
             menuCard: { type: String },
         },
         averageDeliveryTime: { type: String, default: "30-40 min" },
-        priceForTwo: { type: Number, default: 300 },
+        priceForTwo: { type: Number },
         offers: {
             discountText: { type: String, default: "" },
             percentage: { type: Number, default: 0 },

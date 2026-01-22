@@ -1,47 +1,32 @@
 const Joi = require('joi');
 
 exports.adminLoginSchema = Joi.object({
-    phoneNumber: Joi.string()
-        .pattern(/^\+91/)
-        .length(13)
+    medium: Joi.string()
         .required()
-        .messages({
-            'string.empty': 'Phone number is required.',
-            'string.pattern.base': 'Phone number must be in the format +91XXXXXXXXXX.',
-            'string.length': 'Phone number must be exactly 13 characters long with +91.',
-            'any.required': 'Phone number is required.',
-        }),
-
-    password: Joi.string()
-        .min(8)
-        .required()
-        .messages({
-            'string.empty': 'Password is required.',
-            'string.min': 'Password must be at least 8 characters long.',
-            'any.required': 'Password is required.',
-        })
         .custom((value, helpers) => {
-            if (!/[A-Z]/.test(value)) {
-                return helpers.error('password.uppercase');
-            }
-            if (!/[a-z]/.test(value)) {
-                return helpers.error('password.lowercase');
-            }
-            if (!/\d/.test(value)) {
-                return helpers.error('password.number');
-            }
-            if (!/[@$!%*?&]/.test(value)) {
-                return helpers.error('password.special');
+            const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+            const isPhone = /^\+91\d{10}$/.test(value);
+
+            if (!isEmail && !isPhone) {
+                return helpers.message(
+                    'Please enter a valid email or phone number (+91XXXXXXXXXX)'
+                );
             }
             return value;
         })
         .messages({
-            'password.uppercase': 'Password must contain at least one uppercase letter (A-Z).',
-            'password.lowercase': 'Password must contain at least one lowercase letter (a-z).',
-            'password.number': 'Password must contain at least one number (0-9).',
-            'password.special': 'Password must contain at least one special character (@$!%*?&).',
+            'string.empty': 'Email or phone number is required.',
+            'any.required': 'Email or phone number is required.',
+        }),
+
+    password: Joi.string()
+        .required()
+        .messages({
+            'string.empty': 'Password is required.',
+            'any.required': 'Password is required.',
         }),
 });
+
 
 exports.adminAccountSchema = Joi.object({
 
