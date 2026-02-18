@@ -175,7 +175,6 @@ const uploadMenuImages = asyncHandler(async (req, res, next) => {
   );
 });
 
-
 // const getMenusByRestaurant = asyncHandler(async (req, res, next) => {
 //   const { restaurantId } = req.params;
 
