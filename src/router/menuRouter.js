@@ -12,7 +12,7 @@ const menuRouters = express.Router()
 
 
 menuRouters.post("/create/:restaurantId/menus", resturantOwnerMiddleware, createMenu);
-menuRouters.patch("/menu-item/:itemId/stock", resturantOwnerMiddleware, updateMenuItemStock);
+menuRouters.patch("/update/menu-item/:itemId/stock", resturantOwnerMiddleware, updateMenuItemStock);
 menuRouters.post("/upload/:restaurantId/menu-images", resturantOwnerMiddleware, upload.array("images", 10), uploadMenuImages);
 menuRouters.get("/read/:restaurantId", getAllMenuListOfSingleResturant);
 menuRouters.delete("/delete/menu-item/:resturantId/:menuId",resturantOwnerMiddleware, deleteMenuOfRestaurant);

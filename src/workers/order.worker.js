@@ -7,6 +7,7 @@ const redis = require('../utils/redisClient');
 const { Order } = require('../models/Order');
 const { emitOrderPlaced, emitAvailabilityChange, failedTopPlacedOrder } = require('../sockets/emitter');
 const { Menu } = require('../models/menu.model');
+const { ApiError } = require('../utils/apiError');
 
 dotenv.config({
   path: path.resolve(process.cwd(), `.env.${process.env.NODE_ENV || 'development'}`),
@@ -38,7 +39,7 @@ const worker = new Worker('orderQueue', async job => {
       );
       if (!menuItem) {
         failedTopPlacedOrder(userId,resturantUserId, item)
-        throw new Error(`Not enough stock for item ${item.itemId}`);
+        throw new ApiError(`Not enough stock for item ${item.itemId}`);
       }
 
       if (menuItem.stock === 0 && menuItem.isAvailable !== false) {

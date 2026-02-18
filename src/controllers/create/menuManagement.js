@@ -31,13 +31,9 @@ const createMenu = asyncHandler(async (req, res, next) => {
   const { error, value } = createMenuValidationSchema.validate(req.body);
 
   if (error) {
-    const validationErrors = error.details.map((err) => ({
-      field: err.path.join("."),
-      message: err.message,
-    }));
-
-    return next(new ApiError(validationErrors, 400));
+    return next(new ApiError(error.details[0].message, 400));
   }
+
 
   const restaurant = await Restaurant.findById(restaurantId);
   if (!restaurant) {

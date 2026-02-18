@@ -16,8 +16,10 @@ exports.emitOrderPlaced = (order) => {
 };
 
 
-exports.failedTopPlacedOrder = (userId,resturantUserId, item) => {
+exports.failedTopPlacedOrder = (userId, resturantUserId, item) => {
   const io = getIO();
+
+  console.log("items list", item)
   io.to(userId.toString()).emit("failedToPlacedOrder", item);
   io.to(resturantUserId.toString()).emit("failedToPlacedOrder", item);
 };
