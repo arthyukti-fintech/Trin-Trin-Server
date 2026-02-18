@@ -13,6 +13,7 @@ const { superAdminRouter } = require("./router/superAdminRouter");
 const { menuRouters } = require("./router/menuRouter");
 const { commanRouter } = require("./router/commanRouter");
 const { orderRouter } = require("./router/orderRouter");
+const { userRouter } = require("./router/userRouter");
 
 
 
@@ -72,5 +73,6 @@ app.use("/super-admin", superAdminRouter);
 app.use("/menu", menuRouters);
 app.use("/comman", commanRouter);
 app.use("/order", orderRouter)
+app.use("/user", userRouter)
 
 module.exports = { app }

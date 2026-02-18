@@ -176,6 +176,14 @@ exports.orderValidationSchema = Joi.object({
             "string.empty": "User ID is required",
             "any.required": "User ID is required"
         }),
+    resturantId: Joi.string()
+        .trim()
+        .required()
+        .messages({
+            "string.base": "Resturant ID must be a string",
+            "string.empty": "Resturant ID is required",
+            "any.required": "Resturant ID is required"
+        }),
 
     timeSlot: Joi.date()
         .optional()
@@ -204,6 +212,7 @@ exports.orderValidationSchema = Joi.object({
                         "number.min": "Quantity must be at least 1",
                         "any.required": "Quantity is required"
                     }),
+                    
                 price: Joi.number()
                     .integer()
                     .min(0)

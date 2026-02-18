@@ -18,15 +18,19 @@ const queueOrderOfMenuItems = asyncHandler(async (req, res, next) => {
     }
 
 
-    const { items, timeSlot } = req.body;
+    const { items, timeSlot, resturantId } = req.body;
+
 
     if (!req.body.userId || !Array.isArray(items) || items.length === 0) {
         return next(new ApiError("Invalid order format.", 400));
     }
-    const restaurant = await Restaurant.findOne({ resturantOwner: userId })
+    const restaurant = await Restaurant.findById(resturantId)
+    if (!restaurant) {
+        return next(new ApiError("Resturant not found.", 400))
+    }
     const job = await orderQueue.add("new-order", {
         userId: req.body.userId,
-        restaurantId: restaurant._id,
+        restaurantId:resturantId,
         resturantUserId: userId,
         items,
         timeSlot: timeSlot || new Date(),

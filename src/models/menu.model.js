@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 
 const menuSchema = new mongoose.Schema(
@@ -37,13 +36,17 @@ const menuSchema = new mongoose.Schema(
                     type: String,
                     trim: true,
                 },
-                hash: { type: String, unique: true },
+                hash: {
+                    type: String,
+                    unique: true,
+                    sparse: true
+                },
             }
         ],
         stock: {
             type: Number,
             default: 1000,
-            min: 1,
+            min: 0,
         },
         isAvailable: {
             type: Boolean,
@@ -54,13 +57,12 @@ const menuSchema = new mongoose.Schema(
 );
 
 menuSchema.index(
-  { restaurant: 1, menuName: 1 },
-  {
-    unique: true,
-    partialFilterExpression: { menuName: { $exists: true, $ne: null } },
-  }
+    { restaurant: 1, menuName: 1 },
+    {
+        unique: true,
+        partialFilterExpression: { menuName: { $exists: true, $ne: null } },
+    }
 );
-
 
 const Menu = mongoose.model("Menu", menuSchema);
 
