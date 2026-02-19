@@ -23,3 +23,9 @@ exports.failedTopPlacedOrder = (userId, resturantUserId, item) => {
   io.to(userId.toString()).emit("failedToPlacedOrder", item);
   io.to(resturantUserId.toString()).emit("failedToPlacedOrder", item);
 };
+
+exports.updateStatusOfCallerUpdate = (userId, callerDetials) => {
+  const io = getIO();
+
+  io.to(userId.toString()).emit("excotelCallerDetailsLiveUpdate", callerDetials);
+};

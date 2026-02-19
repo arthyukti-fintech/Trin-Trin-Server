@@ -5,6 +5,7 @@ const { ApiError } = require("../../utils/apiError");
 const { ApiResponse } = require("../../utils/apiResponse");
 const { asyncHandler } = require("../../utils/asyncHandler");
 const { exotelWebhookSchema } = require("../../validation/userValidation");
+const { updateStatusOfCallerUpdate } = require("../../sockets/emitter");
 
 const callToResturantForPlaceOrder = asyncHandler(async (req, res, next) => {
     const sidNumber = Math.random() * 1000000;
@@ -53,8 +54,58 @@ const webhookUrlOfResturantOwnerPickupCall = asyncHandler(async (req, res, next)
         return next(new ApiError("Call record not found.", 400));
     }
 
+    const resturantDetail = await Restaurant.findById(callerDetail.resturant);
+    if (!resturantDetail) {
+        return next(new ApiError("resturant record not found.", 400));
+    }
+
+    const callDetail = await CallPicpup.aggregate([
+        {
+            $match: {
+                resturant: new mongoose.Types.ObjectId(callerDetail.resturant),
+                status: "in-progress"
+            }
+        },
+        { $limit: 1 },
+        {
+            $lookup: {
+                from: "profiles",
+                localField: "userId",
+                foreignField: "_id",
+                as: "callerDetail",
+                pipeline: [
+                    {
+                        $project: {
+                            _id: 1,
+                            fullName: 1,
+                            email: 1,
+                            profileId: 1,
+                            status: 1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $addFields: {
+                callerDetail: { $arrayElemAt: ["$callerDetail", 0] }
+            }
+        },
+        {
+            $project: {
+                userId: 0,
+                sidNumber: 0,
+                createdAt: 0.
+
+            }
+        }
+    ]);
+
+    updateStatusOfCallerUpdate(resturantDetail.resturantOwner, callDetail[0])
+
+
     return res.status(200).json(
-        new ApiResponse(200, callerDetail, "Webhook updated successfully.")
+        new ApiResponse(200, {}, "Webhook updated successfully.")
     );
 });
 
