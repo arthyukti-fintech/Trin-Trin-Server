@@ -27,7 +27,7 @@ const loginAdminUser = asyncHandler(async (req, res, next) => {
     const isPasswordValid = await existProfile.isCorrectPassword(password);
     if (!isPasswordValid) return next(new ApiError("Invalid Password", 400));
 
-    const newToken = await existProfile.generateAccessToken();
+    const newToken = await existProfile.generateRefreshToken ();
 
     if (existProfile.role !== "user") {
         existProfile.sessions.push({ token: newToken });

@@ -18,8 +18,7 @@ const queueOrderOfMenuItems = asyncHandler(async (req, res, next) => {
     }
 
 
-    const { items, timeSlot, resturantId } = req.body;
-
+    const { items, timeSlot, resturantId, deliveryAddress, specialInstructions, paymentMethod = "upi" } = req.body;
 
     if (!req.body.userId || !Array.isArray(items) || items.length === 0) {
         return next(new ApiError("Invalid order format.", 400));
@@ -30,9 +29,13 @@ const queueOrderOfMenuItems = asyncHandler(async (req, res, next) => {
     }
     const job = await orderQueue.add("new-order", {
         userId: req.body.userId,
-        restaurantId:resturantId,
+        restaurantId: resturantId,
         resturantUserId: userId,
         items,
+        deliveryAddress,
+        specialInstructions: specialInstructions || "",
+        paymentMethod,
+        estimatedPreparationTime :restaurant.averageDeliveryTime,
         timeSlot: timeSlot || new Date(),
     });
 

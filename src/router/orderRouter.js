@@ -10,7 +10,7 @@ const orderRouter = express.Router({
 });
 
 orderRouter.post("/v1/placed/new-order", authMiddleware, queueOrderOfMenuItems)
-orderRouter.get("/v1/order/order-list", commanMiddleware, getAllOrderList)
+orderRouter.get("/v1/order/order-list/:RestaurantId", commanMiddleware, getAllOrderList)
 
 
 module.exports = { orderRouter };

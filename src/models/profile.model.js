@@ -166,7 +166,14 @@ ProfileSchema.pre('save', function (next) {
     }
 });
 
-ProfileSchema.methods.generateAccessToken = function () {
+ProfileSchema.methods.generateAccessToken   = function () {
+    return jwt.sign(
+        { _id: this._id },
+        process.env.GENERATE_TOKEN_SECRET,
+        { expiresIn: process.env.GENERATE_TOKEN_EXPIRY }
+    );
+};
+ProfileSchema.methods.generateRefreshToken  = function () {
     return jwt.sign(
         { _id: this._id },
         process.env.ACCESS_TOKEN_SECRET,

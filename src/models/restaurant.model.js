@@ -33,6 +33,12 @@ const restaurantSchema = new mongoose.Schema(
         },
         isVegOnly: { type: Boolean, default: false },
         isActive: { type: Boolean, default: true },
+        rating: { type: Number, default: 3.6 },
+        freeDelivery: { type: Boolean, default: false },
+        freeDeliveryDistance: { type: Number, default: "0" },
+        cloudKitchen: {
+            type: Boolean, default: false
+        }
     },
     { timestamps: true }
 );
