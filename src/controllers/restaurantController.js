@@ -53,7 +53,7 @@ const createRestaurant = asyncHandler(async (req, res, next) => {
 const getAllResturants = asyncHandler(async (req, res, next) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 30;
-    const { search, maxDistance } = req.query;
+    const { filterBy, maxDistance } = req.query;
 
     if (page < 1 || limit < 1) {
         return next(new ApiError("Page and limit must be positive numbers.", 400));
@@ -61,7 +61,7 @@ const getAllResturants = asyncHandler(async (req, res, next) => {
 
     let matchStage = {};
 
-    if (search === "FreeDelivery") {
+    if (filterBy === "FreeDelivery") {
         matchStage.freeDelivery = true;
 
         if (maxDistance) {
@@ -71,7 +71,7 @@ const getAllResturants = asyncHandler(async (req, res, next) => {
         }
     }
 
-    if(search === "CloudKitchen"){
+    if(filterBy === "CloudKitchen"){
         matchStage.cloudKitchen = true
     }
     // if(search === "FastDelivery"){
