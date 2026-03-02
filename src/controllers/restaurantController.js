@@ -53,48 +53,86 @@ const createRestaurant = asyncHandler(async (req, res, next) => {
 const getAllResturants = asyncHandler(async (req, res, next) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 30;
-    const { search, maxDistance } = req.query;
+    const { filterBy, maxDistance } = req.query;
 
     if (page < 1 || limit < 1) {
         return next(new ApiError("Page and limit must be positive numbers.", 400));
     }
 
     let matchStage = {};
+    let sortStage = { createdAt: -1 };
 
-    if (search === "FreeDelivery") {
+    if (filterBy === "freeDelivery") {
         matchStage.freeDelivery = true;
 
         if (maxDistance) {
+            const roundedDistance = Math.round(Number(maxDistance));
             matchStage.freeDeliveryDistance = {
-                $gte: Number(maxDistance)
+                $gte: roundedDistance
             };
         }
     }
 
-    if (search === "CloudKitchen") {
-        matchStage.cloudKitchen = true
+    if (filterBy === "cloudKitchen") {
+        matchStage.cloudKitchen = true;
     }
-    // if(search === "FastDelivery"){
-    //     matchStage.averageDeliveryTime = 
-    // }
 
+    if (filterBy === "fastDelivery") {
+        const skip = (page - 1) * limit;
+
+        const [restaurants, totalResult] = await Promise.all([
+            Restaurant.aggregate([
+                { $match: matchStage },
+                {
+                    $addFields: {
+                        sortableDeliveryTime: {
+                            $toInt: {
+                                $arrayElemAt: [
+                                    { $split: ["$averageDeliveryTime", "-"] },
+                                    0
+                                ]
+                            }
+                        }
+                    }
+                },
+                { $sort: { sortableDeliveryTime: 1 } },
+                { $skip: skip },
+                { $limit: limit },
+                {
+                    $project: {
+                        sortableDeliveryTime: 0
+                    }
+                }
+            ]),
+            Restaurant.countDocuments(matchStage)
+        ]);
+
+        const total = totalResult;
+
+        if (!restaurants.length) {
+            return next(new ApiError("No restaurants found.", 404));
+        }
+
+        const totalPages = Math.ceil(total / limit);
+
+        return res.status(200).json(
+            new ApiResponse(200, {
+                restaurants,
+                pagination: {
+                    total,
+                    totalPages,
+                    currentPage: page,
+                    perPage: limit,
+                },
+            }, "Restaurants fetched successfully (sorted by fastest delivery)")
+        );
+    }
 
     const skip = (page - 1) * limit;
 
-    // 🔍 Build search filter
-    const filter = {};
-
-    if (search) {
-        filter.$or = [
-            { name: { $regex: search, $options: "i" } },
-            { "address.city": { $regex: search, $options: "i" } },
-            { cuisine: { $regex: search, $options: "i" } },
-        ];
-    }
-
     const [restaurants, total] = await Promise.all([
         Restaurant.find(matchStage)
-            .sort({ createdAt: -1 })
+            .sort(sortStage)
             .skip(skip)
             .limit(limit),
 
@@ -108,21 +146,18 @@ const getAllResturants = asyncHandler(async (req, res, next) => {
     const totalPages = Math.ceil(total / limit);
 
     return res.status(200).json(
-        new ApiResponse(
-            200,
-            {
-                restaurants,
-                pagination: {
-                    total,
-                    totalPages,
-                    currentPage: page,
-                    perPage: limit,
-                },
+        new ApiResponse(200, {
+            restaurants,
+            pagination: {
+                total,
+                totalPages,
+                currentPage: page,
+                perPage: limit,
             },
-            "Restaurants fetched successfully"
-        )
+        }, "Restaurants fetched successfully")
     );
 });
+
 
 const updateRestaurant = asyncHandler(async (req, res, next) => {
     const role = req.role;
