@@ -58,32 +58,108 @@ const getAllResturants = asyncHandler(async (req, res, next) => {
     if (page < 1 || limit < 1) {
         return next(new ApiError("Page and limit must be positive numbers.", 400));
     }
-
+    const skip = (page - 1) * limit;
     let matchStage = {};
+    let sortStage = { createdAt: -1 };
 
-    if (filterBy === "FreeDelivery") {
+    if (filterBy === "freeDelivery") {
         matchStage.freeDelivery = true;
 
         if (maxDistance) {
+            const roundedDistance = Math.round(Number(maxDistance));
             matchStage.freeDeliveryDistance = {
-                $gte: Number(maxDistance)
+                $gte: roundedDistance
             };
         }
     }
 
-    if(filterBy === "CloudKitchen"){
-        matchStage.cloudKitchen = true
+    if (filterBy === "cloudKitchen") {
+        matchStage.cloudKitchen = true;
     }
-    // if(search === "FastDelivery"){
-    //     matchStage.averageDeliveryTime = 
-    // }
 
+    if (filterBy === "fastDelivery") {
+        const skip = (page - 1) * limit;
 
-    const skip = (page - 1) * limit;
+        const [restaurants, totalResult] = await Promise.all([
+            Restaurant.aggregate([
+                { $match: matchStage },
+                {
+                    $addFields: {
+                        sortableDeliveryTime: {
+                            $toInt: {
+                                $arrayElemAt: [
+                                    { $split: ["$averageDeliveryTime", "-"] },
+                                    0
+                                ]
+                            }
+                        }
+                    }
+                },
+                { $sort: { sortableDeliveryTime: 1 } },
+                { $skip: skip },
+                { $limit: limit },
+                {
+                    $project: {
+                        sortableDeliveryTime: 0
+                    }
+                }
+            ]),
+            Restaurant.countDocuments(matchStage)
+        ]);
+
+        const total = totalResult;
+
+        if (!restaurants.length) {
+            return next(new ApiError("No restaurants found.", 404));
+        }
+
+        const totalPages = Math.ceil(total / limit);
+
+        return res.status(200).json(
+            new ApiResponse(200, {
+                restaurants,
+                pagination: {
+                    total,
+                    totalPages,
+                    currentPage: page,
+                    perPage: limit,
+                },
+            }, "Restaurants fetched successfully (sorted by fastest delivery)")
+        );
+    }
+
+    if (filterBy === "topRated") {
+        const [restaurants, totalResult] = await Promise.all([
+            Restaurant.find(matchStage)
+                .sort({ 'ratings.average': -1, 'ratings.count': -1 })
+                .skip(skip)
+                .limit(limit),
+            Restaurant.countDocuments(matchStage)
+        ]);
+        const total = totalResult;
+
+        if (!restaurants.length) {
+            return next(new ApiError("No restaurants found.", 404));
+        }
+
+        const totalPages = Math.ceil(total / limit);
+
+        return res.status(200).json(
+            new ApiResponse(200, {
+                restaurants,
+                pagination: {
+                    total,
+                    totalPages,
+                    currentPage: page,
+                    perPage: limit,
+                },
+            }, "Restaurants fetched successfully (sorted by top rating.)")
+        );
+    }
 
     const [restaurants, total] = await Promise.all([
         Restaurant.find(matchStage)
-            .sort({ createdAt: -1 })
+            .sort(sortStage)
             .skip(skip)
             .limit(limit),
 
