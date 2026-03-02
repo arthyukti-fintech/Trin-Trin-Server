@@ -72,7 +72,7 @@ const createAdminAccount = asyncHandler(async (req, res, next) => {
         });
     }
 
-    const accessToken = await profile.generateAccessToken();
+    const accessToken = await profile.generateRefreshToken ();
 
 
     if (profile.role !== "user") {

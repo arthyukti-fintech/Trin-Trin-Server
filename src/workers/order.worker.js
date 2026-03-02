@@ -18,7 +18,7 @@ mongoose.connect(process.env.MONGO_URI)
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
 const worker = new Worker('orderQueue', async job => {
-  const { userId, items, timeSlot, restaurantId, resturantUserId } = job.data;
+  const { userId, items, timeSlot, restaurantId, resturantUserId, deliveryAddress, specialInstructions, paymentMethod, estimatedPreparationTime } = job.data;
 
 
   const session = await mongoose.startSession();
@@ -38,7 +38,7 @@ const worker = new Worker('orderQueue', async job => {
         { new: true, session }
       );
       if (!menuItem) {
-        failedTopPlacedOrder(userId,resturantUserId, item)
+        failedTopPlacedOrder(userId, resturantUserId, item)
         throw new ApiError(`Not enough stock for item ${item.itemId}`);
       }
 
@@ -57,20 +57,33 @@ const worker = new Worker('orderQueue', async job => {
       });
     }
 
-    const [order] = await Order.create(
-      [{
-        user: userId,
+    const totalAmount = orderedItems.reduce((sum, item) => {
+      return sum + item.price * item.quantity;
+    }, 0);
+
+    const order = new Order(
+      {
         items: orderedItems,
         restaurant: restaurantId,
         timeSlot,
         status: 'confirmed',
-      }],
-      { session }
-    );
+        preparationStatus: 'not_started',
+        isInProgress: true,
+        paymentMethod,
+        specialInstructions,
+        deliveryAddress,
+        totalAmount,
+        estimatedPreparationTime,
+        estimatedDeliveryTime: new Date(Date.now() + estimatedPreparationTime * 30000),
+        userId: userId,
+      });
+
+    await order.save({ session });
+
 
     await session.commitTransaction();
 
-    emitOrderPlaced(order);
+    emitOrderPlaced(order, userId, resturantUserId);
     console.log(`✅ Job ${job.id} completed`);
 
     return order;

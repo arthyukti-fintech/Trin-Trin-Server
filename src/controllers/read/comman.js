@@ -109,6 +109,12 @@ const getAllOrderList = asyncHandler(async (req, res, next) => {
     const userId = req.userId;
     const role = req.role;
 
+    const { RestaurantId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(RestaurantId)) {
+        return next(new ApiError("Invalid RestaurantId ID.", 400));
+    }
+
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 30;
     const search = req.query.search || "";
@@ -119,7 +125,7 @@ const getAllOrderList = asyncHandler(async (req, res, next) => {
     let matchStage = {};
 
     if (role === "resturantsOwner") {
-        const restaurant = await Restaurant.findOne({ resturantOwner: userId });
+        const restaurant = await Restaurant.findOne({ resturantOwner: userId, _id: RestaurantId });
         if (!restaurant) {
             return next(new ApiError("Restaurant not found", 404));
         }
@@ -172,7 +178,6 @@ const getAllOrderList = asyncHandler(async (req, res, next) => {
         )
     );
 });
-
 
 const getAllOrderListOfSingleResturants = asyncHandler(async (req, res, next) => {
     const userId = req.userId;
@@ -297,12 +302,12 @@ const readAllUserList = asyncHandler(async (req, res) => {
             {
                 $project: {
                     _1d: 1,
-                    phoneNumber:1,
-                    status:1,
-                    gender:1,
-                    profileId:1,
-                    fullName:1,
-                    email:1
+                    phoneNumber: 1,
+                    status: 1,
+                    gender: 1,
+                    profileId: 1,
+                    fullName: 1,
+                    email: 1
                 }
             }
         ]),
@@ -322,5 +327,48 @@ const readAllUserList = asyncHandler(async (req, res) => {
     );
 });
 
+const getAllActiveOrderOfRestaurant = asyncHandler(async (req, res, next) => {
+    const userId = req.userId;
+    const role = req.role
+    const { restaurantId } = req.params;
 
-module.exports = { getAllResturantsRoleBase, readAllUserList, readDashboardProfile, getRestaurantById, getAllOrderList, getAllOrderListOfSingleResturants }
+    if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
+        return next(new ApiError("Invalid restaurantId ID.", 400));
+    }
+
+    if (role === "resturantsOwner") {
+        const restaurant = await Restaurant.findOne({ resturantOwner: userId, _id:restaurantId });
+        if (!restaurant) {
+            return next(new ApiError("Restaurant not found", 404));
+        }
+
+    } else if (role !== "admin" && role !== "superAdmin") {
+        return next(
+            new ApiError(
+                "Unauthorized access. Access allowed only to Admin or RestaurantOwner",
+                403
+            )
+        );
+    }
+
+    const orders = await Order.getRestaurantActiveOrders(restaurantId);
+    const formattedOrders = orders.map(order => ({
+        orderId: order._id,
+        orderNumber: order._id.toString().slice(-8).toUpperCase(),
+        userId: order.userId,
+        items: order.items,
+        totalAmount: order.totalAmount,
+        status: order.status,
+        preparationStatus: order.preparationStatus,
+        deliveryAddress: order.deliveryAddress,
+        specialInstructions: order.specialInstructions,
+        orderDate: order.createdAt,
+        estimatedDeliveryTime: order.estimatedDeliveryTime
+    }));
+
+    return res.status(200).json(new ApiResponse(200, formattedOrders))
+})
+
+
+
+module.exports = { getAllResturantsRoleBase, readAllUserList, getAllActiveOrderOfRestaurant, readDashboardProfile, getRestaurantById, getAllOrderList, getAllOrderListOfSingleResturants }

@@ -9,7 +9,6 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
         return next(new ApiError("Authorization token missing", 401));
     }
-
     const token = authHeader.split(" ")[1];
 
     try {
@@ -18,6 +17,10 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
 
         if (!user) {
             return next(new ApiError("Profile not found", 401));
+        }
+
+        if (user.accessToken === null) {
+            return next(new ApiError("You are logout. Please login again.", 401));
         }
 
         // const sessionExists = user.sessions?.some(
@@ -42,6 +45,7 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
     } catch (err) {
         return next(new ApiError("Invalid or expired token", 401));
     }
+
 });
 
 module.exports = { authMiddleware };

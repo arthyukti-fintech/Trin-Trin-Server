@@ -16,4 +16,22 @@ const getAllMenuListOfSingleResturant = asyncHandler(async (req, res, next) => {
 
 })
 
-module.exports = { getAllMenuListOfSingleResturant }
+const getAllMenuListOfSingleResturantOrderListImage = asyncHandler(async (req, res, next) => {
+    const { restaurantId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(restaurantId)) {
+        return next(new ApiError("Invalid restaurant ID.", 400));
+    }
+
+    const menuList = await Menu.find({
+        restaurant: restaurantId,
+        image: { $exists: true, $ne: [] } 
+    }).lean();
+
+    return res.status(200).json(
+        new ApiResponse(200, { menuList })
+    );
+});
+
+
+module.exports = { getAllMenuListOfSingleResturant,getAllMenuListOfSingleResturantOrderListImage }
