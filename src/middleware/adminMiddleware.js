@@ -3,7 +3,6 @@ const { asyncHandler } = require("../utils/asyncHandler");
 const { ApiError } = require("../utils/apiError");
 const { Profile } = require("../models/profile.model");
 
-
 const adminMiddleware = asyncHandler(async (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -22,7 +21,7 @@ const adminMiddleware = asyncHandler(async (req, res, next) => {
             return next(new ApiError("You are logged out. Please log in again.", 403));
         }
 
-       if (user.role !== "admin" && user.role !== "superAdmin") {
+        if (user.role !== "admin" && user.role !== "superAdmin") {
             return next(new ApiError("You are not allowed to access this platform.", 403));
         }
 
@@ -38,7 +37,7 @@ const adminMiddleware = asyncHandler(async (req, res, next) => {
         req.userId = user._id;
         next();
     } catch (error) {
-        return next(new ApiError("Invalid or expired token", 401));
+        return next(new ApiError(error||"Invalid or expired token", 401));
     }
 
 })

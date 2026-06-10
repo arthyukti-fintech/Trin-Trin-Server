@@ -1,0 +1,69 @@
+const mongoose = require("mongoose");
+
+const menuSchema = new mongoose.Schema(
+    {
+        restaurant: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Restaurant",
+            required: true,
+            index: true,
+        },
+        menuName: {
+            type: String,
+        },
+        description: {
+            type: String,
+            trim: true,
+            maxlength: 1000,
+        },
+        price: {
+            type: Number,
+            min: 0,
+        },
+        isVeg: {
+            type: Boolean,
+            default: true,
+        },
+        category: {
+            type: String,
+            trim: true,
+            default: "Other",
+        },
+        image: [
+            {
+                imageUrl:
+                {
+                    type: String,
+                    trim: true,
+                },
+                hash: {
+                    type: String,
+                    unique: true,
+                    sparse: true
+                },
+            }
+        ],
+        stock: {
+            type: Number,
+            default: 1000,
+            min: 0,
+        },
+        isAvailable: {
+            type: Boolean,
+            default: true,
+        },
+    },
+    { timestamps: true }
+);
+
+menuSchema.index(
+    { restaurant: 1, menuName: 1 },
+    {
+        unique: true,
+        partialFilterExpression: { menuName: { $exists: true, $ne: null } },
+    }
+);
+
+const Menu = mongoose.model("Menu", menuSchema);
+
+module.exports = { Menu };

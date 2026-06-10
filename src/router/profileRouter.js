@@ -2,9 +2,9 @@ const express = require("express");
 
 const {
     getMyProfile,
+    updateMyProfile,
 } = require("../controllers/profileController");
 const { authMiddleware } = require("../middleware/authMiddleware");
-const { adminMiddleware } = require("../middleware/adminMiddleware");
 
 const profileRouter = express.Router();
 
@@ -14,5 +14,10 @@ profileRouter.get(
     getMyProfile
 );
 
+profileRouter.patch(
+    "/profile/me",
+    authMiddleware,
+    updateMyProfile
+);
 
 module.exports = { profileRouter };

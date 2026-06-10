@@ -17,12 +17,12 @@ const restaurantSchema = new mongoose.Schema(
         },
         phoneNumber: { type: String, required: true },
         images: {
-            exterior: { type: String }, 
+            exterior: { type: String },
             interior: { type: String },
             menuCard: { type: String },
         },
         averageDeliveryTime: { type: String, default: "30-40 min" },
-        priceForTwo: { type: Number, default: 300 },
+        priceForTwo: { type: Number },
         offers: {
             discountText: { type: String, default: "" },
             percentage: { type: Number, default: 0 },
@@ -33,9 +33,35 @@ const restaurantSchema = new mongoose.Schema(
         },
         isVegOnly: { type: Boolean, default: false },
         isActive: { type: Boolean, default: true },
+        ratings: {
+            average: {
+                type: Number,
+                default: 0,
+                min: 0,
+                max: 5
+            },
+            count: {
+                type: Number,
+                default: 0
+            },
+            breakdown: {
+                oneStar: { type: Number, default: 0 },
+                twoStar: { type: Number, default: 0 },
+                threeStar: { type: Number, default: 0 },
+                fourStar: { type: Number, default: 0 },
+                fiveStar: { type: Number, default: 0 }
+            }
+        },
+        freeDelivery: { type: Boolean, default: false },
+        freeDeliveryDistance: { type: Number, default: "0" },
+        cloudKitchen: {
+            type: Boolean, default: false
+        }
     },
     { timestamps: true }
 );
+
+// restaurantSchema.index({ name: 1, cuisine: 1, "address.city": 1 })
 
 const Restaurant = mongoose.model("Restaurant", restaurantSchema);
 module.exports = { Restaurant };

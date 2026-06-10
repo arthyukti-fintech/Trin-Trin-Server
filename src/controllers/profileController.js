@@ -3,14 +3,24 @@ const { Profile } = require("../models/profile.model");
 const { ApiError } = require("../utils/apiError");
 const { ApiResponse } = require("../utils/apiResponse");
 const { asyncHandler } = require("../utils/asyncHandler");
-const { profileSchema } = require("../validation/profileValidation");
+const { profileSchema, profileUpdateSchema } = require("../validation/profileValidation");
+const { sendMobileNumberOTP } = require("../utils/sendOTP");
+
+const sendOpt = asyncHandler(async (req, res, next) => {
+    await sendMobileNumberOTP(+918299760673)
+
+    return res.status(200).json(
+        new ApiResponse(200, { accessToken: "sucesss" })
+    );
+})
 
 const loginProfile = asyncHandler(async (req, res, next) => {
-    const user = req.user;
+    // const user = req.user;
 
-    if (!user) {
-        return next(new ApiError("You are not authorized to access this platform.", 401));
-    }
+    // if (!user) {
+    //     return next(new ApiError("You are not authorized to access this platform.", 401));
+    // }
+
 
     if (!req.body || Object.keys(req.body).length === 0) {
         return next(new ApiError("Request body cannot be empty.", 400));
@@ -23,9 +33,9 @@ const loginProfile = asyncHandler(async (req, res, next) => {
     }
     const { phoneNumber, expoToken } = req.body;
 
-    if (phoneNumber !== user.phoneNumber) {
-        return next(new ApiError("Your credentials do not match.", 401));
-    }
+    // if (phoneNumber !== user.phoneNumber) {
+    //     return next(new ApiError("Your credentials do not match.", 401));
+    // }
 
 
     const userAgent = req.headers["user-agent"] || "Unknown";
@@ -42,7 +52,7 @@ const loginProfile = asyncHandler(async (req, res, next) => {
     profile.userAgent = userAgent;
     profile.os = os;
     profile.expoToken = expoToken
-    const newToken = await profile.generateAccessToken();
+    const newToken = await profile.generateRefreshToken ();
     profile.accessToken = newToken;
 
     await profile.save({ validateBeforeSave: false });
@@ -54,7 +64,7 @@ const loginProfile = asyncHandler(async (req, res, next) => {
 });
 
 const getMyProfile = asyncHandler(async (req, res, next) => {
-    const userId = req.userId; 
+    const userId = req.userId;
     const profile = await Profile.findById(userId).select("-sessions -activityLog -ip -userAgent -os -accessToken ")
 
     return res.status(200).json(
@@ -62,9 +72,60 @@ const getMyProfile = asyncHandler(async (req, res, next) => {
     );
 });
 
+const updateMyProfile = asyncHandler(async (req, res, next) => {
+    const userId = req.userId;
+
+    const profile = await Profile.findById(userId).select(
+        "-sessions -activityLog -ip -userAgent -os -accessToken"
+    );
+
+    if (!profile) {
+        return next(new ApiError("Profile not found", 404));
+    }
+
+    // Validate request body
+    const { error, value } = profileUpdateSchema.validate(req.body);
+    if (error) {
+        return next(new ApiError(error.details[0].message, 400));
+    }
+
+    // ✅ Only validated fields are updated
+    Object.assign(profile, value);
+
+    await profile.save();
+
+    return res.status(200).json(
+        new ApiResponse(200, profile, "Profile updated successfully")
+    );
+});
+
+const logoutProfile = asyncHandler(async (req, res, next) => {
+    const userId = req.userId;
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!userId) {
+        return next(new ApiError("You are not authorized to access this platform.", 401));
+    }
+
+    const profile = await Profile.findById(userId);
+
+    if (!profile) return next(new ApiError("You are not allow to logout this profile."))
+
+    profile.accessToken = null;
+    await Profile.updateOne(
+        { _id: userId },
+        { $pull: { sessions: { token } } }
+    );
+    await profile.save({ validateBeforeSave: false });
+
+    return res.status(200).json(new ApiResponse(200, "", "Logout successfully."))
+
+})
 
 module.exports = {
     loginProfile,
-     getMyProfile,
-
+    getMyProfile,
+    sendOpt,
+    updateMyProfile,
+    logoutProfile
 }

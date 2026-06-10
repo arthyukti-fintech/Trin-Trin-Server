@@ -17,3 +17,33 @@ exports.profileSchema = Joi.object({
             'string.empty': 'Expo push token cannot be empty string.',
         }),
 });
+
+exports.profileUpdateSchema = Joi.object({
+    // Basic info
+    fullName: Joi.string().min(2).max(50).optional(),
+    gender: Joi.string().valid("male", "female", "others").allow(null).optional(),
+    email: Joi.string().email().lowercase().optional(),
+    phoneNumber: Joi.string().optional(), // optional if you allow editing
+
+    // Status / flags (user-level only)
+    emailVerification: Joi.boolean().optional(),
+    status: Joi.string().valid("normal", "premium").optional(),
+
+    // Referral related (if user-facing)
+    referredCount: Joi.number().integer().min(0).optional(),
+    referredBy: Joi.string().allow(null).optional(),
+    usedReferralCode: Joi.boolean().optional(),
+
+    // Any extra profile fields you may have
+    dob: Joi.date().optional(),
+    profileImage: Joi.string().uri().optional(),
+    address: Joi.object({
+        street: Joi.string().optional(),
+        city: Joi.string().optional(),
+        state: Joi.string().optional(),
+        pincode: Joi.string().optional(),
+    }).optional(),
+
+}).min(1).unknown(false);
+
+

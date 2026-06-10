@@ -1,37 +1,23 @@
+const { ApiError } = require("../utils/apiError");
 const jwt = require("jsonwebtoken");
 const { asyncHandler } = require("../utils/asyncHandler");
-const { ApiError } = require("../utils/apiError");
 const { Profile } = require("../models/profile.model");
 
-const authMiddleware = asyncHandler(async (req, res, next) => {
+const commanMiddleware = asyncHandler(async (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
         return next(new ApiError("Authorization token missing", 401));
     }
-    const token = authHeader.split(" ")[1];
 
     try {
+        const token = authHeader.split(" ")[1];
         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
         const user = await Profile.findById(decoded._id);
 
         if (!user) {
             return next(new ApiError("Profile not found", 401));
         }
-
-        if (user.accessToken === null) {
-            return next(new ApiError("You are logout. Please login again.", 401));
-        }
-
-        // const sessionExists = user.sessions?.some(
-        //     session => session.token === token
-        // );
-
-        // if (!sessionExists) {
-        //     return next(
-        //         new ApiError("Session expired. Please login again.", 401)
-        //     );
-        // }
 
         if (user.isActive === false) {
             return next(
@@ -40,12 +26,13 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
         }
 
         req.userId = user._id;
-        req.user = user;
+        req.role = user.role;
         next();
-    } catch (err) {
+    } catch (error) {
+        console.log(error)
         return next(new ApiError("Invalid or expired token", 401));
     }
 
-});
+})
 
-module.exports = { authMiddleware };
+module.exports = { commanMiddleware }

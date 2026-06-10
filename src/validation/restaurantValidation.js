@@ -115,3 +115,190 @@ exports.restaurantCreateSchema = Joi.object({
         "boolean.base": "isVegOnly must be a boolean value (true or false)."
     }),
 });
+
+exports.createResturantOwnerValidationScheme = Joi.object({
+    phoneNumber: Joi.string()
+        .pattern(/^\+91/)
+        .length(13)
+        .required()
+        .messages({
+            'string.empty': 'Phone number is required.',
+            'string.pattern.base': 'Phone number must be in the format +91XXXXXXXXXX',
+            'string.length': 'Phone number must be exactly 13 characters long with +91.',
+            'any.required': 'Phone number is required',
+        }),
+    fullName: Joi.string()
+        .required()
+        .messages({
+            'string.empty': 'User name is required',
+            'any.required': 'User name is required',
+        }),
+    password: Joi.string()
+        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
+        .required()
+        .messages({
+            'string.empty': 'Password is required.',
+            'string.pattern.base':
+                'Password must meet all of the following:\n' +
+                '- At least 8 characters long\n' +
+                '- At least one uppercase letter (A-Z)\n' +
+                '- At least one lowercase letter (a-z)\n' +
+                '- At least one number (0-9)\n' +
+                '- At least one special character (@$!%*?&)',
+            'any.required': 'Password is required.',
+        }),
+    dob: Joi.date()
+        .iso()
+        .less('now')
+        .optional()
+        .messages({
+            'date.base': 'Date of birth must be a valid date',
+            'date.format': 'Date of birth must be in ISO format (YYYY-MM-DD)',
+            'date.less': 'Date of birth must be in the past',
+        }),
+
+    email: Joi.string()
+        .email({ tlds: { allow: false } })
+        .required()
+        .messages({
+            "string.email": "Please enter a valid email address.",
+            "string.empty": "Email is required.",
+            "any.required": "Email is required.",
+        })
+});
+
+exports.orderValidationSchema = Joi.object({
+    userId: Joi.string()
+        .trim()
+        .required()
+        .messages({
+            "string.base": "User ID must be a string",
+            "string.empty": "User ID is required",
+            "any.required": "User ID is required"
+        }),
+    resturantId: Joi.string()
+        .trim()
+        .required()
+        .messages({
+            "string.base": "Resturant ID must be a string",
+            "string.empty": "Resturant ID is required",
+            "any.required": "Resturant ID is required"
+        }),
+
+    timeSlot: Joi.date()
+        .optional()
+        .messages({
+            "date.base": "Time slot must be a valid date"
+        }),
+    specialInstructions: Joi.string()
+        .trim()
+        .max(500)
+        .optional(),
+
+    // ✅ Production Level deliveryAddress
+    deliveryAddress: Joi.object({
+        street: Joi.string()
+            .trim()
+            .min(3)
+            .max(255)
+            .required()
+            .messages({
+                "string.empty": "Street is required"
+            }),
+
+        city: Joi.string()
+            .trim()
+            .min(2)
+            .max(100)
+            .required()
+            .messages({
+                "string.empty": "City is required"
+            }),
+
+        zipCode: Joi.string()
+            .trim()
+            .pattern(/^[0-9]{5,10}$/)
+            .required()
+            .messages({
+                "string.pattern.base": "Zip code must be valid",
+                "string.empty": "Zip code is required"
+            }),
+
+        coordinates: Joi.object({
+            latitude: Joi.number()
+                .min(-90)
+                .max(90)
+                .required()
+                .messages({
+                    "number.base": "Latitude must be a number",
+                    "number.min": "Latitude must be between -90 and 90",
+                    "number.max": "Latitude must be between -90 and 90"
+                }),
+
+            longitude: Joi.number()
+                .min(-180)
+                .max(180)
+                .required()
+                .messages({
+                    "number.base": "Longitude must be a number",
+                    "number.min": "Longitude must be between -180 and 180",
+                    "number.max": "Longitude must be between -180 and 180"
+                })
+        }).required()
+    }).required()
+        .messages({
+            "object.base": "Delivery address must be an object",
+            "any.required": "Delivery address is required"
+        }),
+
+    items: Joi.array()
+        .items(
+            Joi.object({
+                itemId: Joi.string()
+                    .required()
+                    .messages({
+                        "string.base": "Item ID must be a string",
+                        "string.empty": "Item ID is required",
+                        "any.required": "Item ID is required"
+                    }),
+
+                quantity: Joi.number()
+                    .integer()
+                    .min(1)
+                    .required()
+                    .messages({
+                        "number.base": "Quantity must be a number",
+                        "number.integer": "Quantity must be an integer",
+                        "number.min": "Quantity must be at least 1",
+                        "any.required": "Quantity is required"
+                    }),
+
+                price: Joi.number()
+                    .integer()
+                    .min(0)
+                    .required()
+                    .messages({
+                        "number.base": "Price must be a number",
+                        "number.integer": "Price must be an integer",
+                        "number.min": "Price must be at least 1",
+                        "any.required": "Price is required"
+                    }),
+
+                itemName: Joi.string()
+                    .trim()
+                    .required()
+                    .messages({
+                        "string.base": "Item name must be a string",
+                        "string.empty": "Item name is required",
+                        "any.required": "Item name is required"
+                    })
+            })
+        )
+        .min(1)
+        .required()
+        .messages({
+            "array.base": "Items must be an array",
+            "array.min": "At least one item is required",
+            "any.required": "Items are required"
+        })
+});

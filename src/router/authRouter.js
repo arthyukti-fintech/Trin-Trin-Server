@@ -1,12 +1,14 @@
 const express = require("express");
-const { loginProfile } = require("../controllers/profileController");
+const { loginProfile, sendOpt, logoutProfile } = require("../controllers/profileController");
 const { verifyFirebaseToken } = require("../middleware/fireBaseMiddleware");
+const { authMiddleware } = require("../middleware/authMiddleware");
 
 const authRouter = express.Router({
     caseSensitive: true,
     strict: true
 });
 
-authRouter.post("/login", verifyFirebaseToken, loginProfile);
+authRouter.post("/login", loginProfile);
+authRouter.post("/logout",authMiddleware, logoutProfile);
 
 module.exports = { authRouter };

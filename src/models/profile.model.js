@@ -42,8 +42,8 @@ const ProfileSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['verified', 'premium', 'normal'],
-        default: 'normal',
+        enum: ['verified', 'premium', 'normal', "pending"],
+        default: 'pending',
     },
     role: {
         type: String,
@@ -56,13 +56,12 @@ const ProfileSchema = new mongoose.Schema({
     },
     referralCode: {
         type: String,
-        unique: true,
-        trim: true,
         uppercase: true,
+        default: null
     },
     gender: {
         type: String,
-        enum: ["M", "F", "Others"],
+        enum: ["male", "female", "others"],
         default: null
     },
     referredCount: {
@@ -106,17 +105,17 @@ const ProfileSchema = new mongoose.Schema({
         type: String
     },
     createdViaAPI: {
-    type: Boolean,
-    default: false,
-    select: false 
-}
+        type: Boolean,
+        default: false,
+        select: false
+    }
 }, {
     timestamps: true,
 });
 
 ProfileSchema.index({ phoneNumber: 1 }, { unique: true, sparse: true });
 ProfileSchema.index({ email: 1 }, { unique: true, sparse: true });
-ProfileSchema.index({ referralCode: 1 }, { unique: true, sparse: true });
+ProfileSchema.index({ referralCode: 1 });
 ProfileSchema.index({ profileId: 1 }, { unique: true, sparse: true });
 ProfileSchema.index({ referredBy: 1 });
 ProfileSchema.index({ isActive: 1 });
@@ -167,7 +166,14 @@ ProfileSchema.pre('save', function (next) {
     }
 });
 
-ProfileSchema.methods.generateAccessToken = function () {
+ProfileSchema.methods.generateAccessToken   = function () {
+    return jwt.sign(
+        { _id: this._id },
+        process.env.GENERATE_TOKEN_SECRET,
+        { expiresIn: process.env.GENERATE_TOKEN_EXPIRY }
+    );
+};
+ProfileSchema.methods.generateRefreshToken  = function () {
     return jwt.sign(
         { _id: this._id },
         process.env.ACCESS_TOKEN_SECRET,

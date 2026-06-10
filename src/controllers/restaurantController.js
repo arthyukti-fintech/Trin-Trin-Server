@@ -4,17 +4,19 @@ const { ApiError } = require("../utils/apiError");
 const { ApiResponse } = require("../utils/apiResponse");
 const { asyncHandler } = require("../utils/asyncHandler");
 const { restaurantCreateSchema } = require("../validation/restaurantValidation");
+const { Menu } = require("../models/menu.model");
 
 const createRestaurant = asyncHandler(async (req, res, next) => {
+    const userId = req.userId;
+    if (!userId) {
+        return next(new ApiError("Unauthorized access. Please login first.", 401));
+    }
 
     if (!req.body || Object.keys(req.body).length === 0) {
         return next(new ApiError("Request body cannot be empty.", 400));
     }
 
-    const { error, value } = restaurantCreateSchema.validate(req.body, {
-        abortEarly: false,
-        stripUnknown: true,
-    });
+    const { error, value } = restaurantCreateSchema.validate(req.body);
 
     if (error) {
         const validationErrors = error.details.map((err) => ({
@@ -26,7 +28,6 @@ const createRestaurant = asyncHandler(async (req, res, next) => {
     }
 
     const { phoneNumber, name } = value;
-
     const existing = await Restaurant.findOne({
         $or: [
             { phoneNumber },
@@ -42,8 +43,7 @@ const createRestaurant = asyncHandler(async (req, res, next) => {
             )
         );
     }
-
-    const restaurant = await Restaurant.create(value);
+    const restaurant = await Restaurant.create({ ...value, resturantOwner: userId });
 
     return res.status(201).json(
         new ApiResponse(201, restaurant, "Restaurant created successfully.")
@@ -53,27 +53,124 @@ const createRestaurant = asyncHandler(async (req, res, next) => {
 const getAllResturants = asyncHandler(async (req, res, next) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 30;
+    const { filterBy, maxDistance } = req.query;
 
     if (page < 1 || limit < 1) {
         return next(new ApiError("Page and limit must be positive numbers.", 400));
     }
-
     const skip = (page - 1) * limit;
+    let matchStage = {};
+    let sortStage = { createdAt: -1 };
+
+    if (filterBy === "freeDelivery") {
+        matchStage.freeDelivery = true;
+
+        if (maxDistance) {
+            const roundedDistance = Math.round(Number(maxDistance));
+            matchStage.freeDeliveryDistance = {
+                $gte: roundedDistance
+            };
+        }
+    }
+
+    if (filterBy === "cloudKitchen") {
+        matchStage.cloudKitchen = true;
+    }
+
+    if (filterBy === "fastDelivery") {
+        const skip = (page - 1) * limit;
+
+        const [restaurants, totalResult] = await Promise.all([
+            Restaurant.aggregate([
+                { $match: matchStage },
+                {
+                    $addFields: {
+                        sortableDeliveryTime: {
+                            $toInt: {
+                                $arrayElemAt: [
+                                    { $split: ["$averageDeliveryTime", "-"] },
+                                    0
+                                ]
+                            }
+                        }
+                    }
+                },
+                { $sort: { sortableDeliveryTime: 1 } },
+                { $skip: skip },
+                { $limit: limit },
+                {
+                    $project: {
+                        sortableDeliveryTime: 0
+                    }
+                }
+            ]),
+            Restaurant.countDocuments(matchStage)
+        ]);
+
+        const total = totalResult;
+
+        if (!restaurants.length) {
+            return next(new ApiError("No restaurants found.", 404));
+        }
+
+        const totalPages = Math.ceil(total / limit);
+
+        return res.status(200).json(
+            new ApiResponse(200, {
+                restaurants,
+                pagination: {
+                    total,
+                    totalPages,
+                    currentPage: page,
+                    perPage: limit,
+                },
+            }, "Restaurants fetched successfully (sorted by fastest delivery)")
+        );
+    }
+
+    if (filterBy === "topRated") {
+        const [restaurants, totalResult] = await Promise.all([
+            Restaurant.find(matchStage)
+                .sort({ 'ratings.average': -1, 'ratings.count': -1 })
+                .skip(skip)
+                .limit(limit),
+            Restaurant.countDocuments(matchStage)
+        ]);
+        const total = totalResult;
+
+        if (!restaurants.length) {
+            return next(new ApiError("No restaurants found.", 404));
+        }
+
+        const totalPages = Math.ceil(total / limit);
+
+        return res.status(200).json(
+            new ApiResponse(200, {
+                restaurants,
+                pagination: {
+                    total,
+                    totalPages,
+                    currentPage: page,
+                    perPage: limit,
+                },
+            }, "Restaurants fetched successfully (sorted by top rating.)")
+        );
+    }
 
     const [restaurants, total] = await Promise.all([
-        Restaurant.find().sort({ createdAt: -1 }).skip(skip).limit(limit),
-        Restaurant.countDocuments()
-    ])
+        Restaurant.find(matchStage)
+            .sort(sortStage)
+            .skip(skip)
+            .limit(limit),
 
-    if (!restaurants || restaurants.length === 0) {
+        Restaurant.countDocuments(matchStage)
+    ]);
+
+    if (!restaurants.length) {
         return next(new ApiError("No restaurants found.", 404));
     }
 
-    if (!restaurants || restaurants.length === 0) {
-        return next(new ApiError("No restaurants found.", 404));
-    }
-
-    const totalPages = Math.ceil(total / limit)
+    const totalPages = Math.ceil(total / limit);
 
     return res.status(200).json(
         new ApiResponse(200, {
@@ -86,28 +183,11 @@ const getAllResturants = asyncHandler(async (req, res, next) => {
             },
         }, "Restaurants fetched successfully")
     );
-
-})
-
-const getRestaurantById = asyncHandler(async (req, res, next) => {
-
-    const { id } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return next(new ApiError("Invalid account ID.", 400));
-    }
-
-    const restaurant = await Restaurant.findById(id).lean();
-
-    if (!restaurant) {
-        return next(new ApiError("Restaurant not found with the provided ID.", 404));
-    }
-
-    return res
-        .status(200)
-        .json(new ApiResponse(200, restaurant, "Restaurant fetched successfully"));
 });
 
+
 const updateRestaurant = asyncHandler(async (req, res, next) => {
+    const role = req.role;
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return next(new ApiError("Invalid account ID.", 400));
@@ -115,6 +195,10 @@ const updateRestaurant = asyncHandler(async (req, res, next) => {
 
     if (!req.body || Object.keys(req.body).length === 0) {
         return next(new ApiError("Request body is empty. Nothing to update.", 400));
+    }
+
+    if (role !== "resturantsOwner" && role !== "admin" && role !== "superAdmin") {
+        return next(new ApiError("You are not allowed to access this platform.", 403));
     }
 
     const { error, value } = restaurantCreateSchema
@@ -160,4 +244,4 @@ const deleteRestaurant = asyncHandler(async (req, res, next) => {
         .json(new ApiResponse(200, null, "Restaurant deleted successfully"));
 });
 
-module.exports = { createRestaurant, getAllResturants, getRestaurantById, updateRestaurant, deleteRestaurant };
+module.exports = { createRestaurant, getAllResturants, updateRestaurant, deleteRestaurant };

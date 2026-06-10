@@ -10,7 +10,10 @@ const { resturantRouter } = require("./router/restaurantRouter");
 const { profileRouter } = require("./router/profileRouter");
 const { adminRouter } = require("./router/adminRouter");
 const { superAdminRouter } = require("./router/superAdminRouter");
-
+const { menuRouters } = require("./router/menuRouter");
+const { commanRouter } = require("./router/commanRouter");
+const { orderRouter } = require("./router/orderRouter");
+const { userRouter } = require("./router/userRouter");
 
 
 const app = express();
@@ -62,10 +65,13 @@ app.use(cors(corsOptions));
 
 app.use("/auth", authRouter);
 app.use('/admin/queues', router);
-app.use("/api/restaurants", resturantRouter);
 app.use("/api", profileRouter);
 app.use("/restaurants", resturantRouter);
 app.use("/admin", adminRouter);
 app.use("/super-admin", superAdminRouter);
+app.use("/menu", menuRouters);
+app.use("/comman", commanRouter);
+app.use("/order", orderRouter)
+app.use("/user", userRouter)
 
 module.exports = { app }
