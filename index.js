@@ -15,6 +15,17 @@ dotenv.config({
 const server = http.createServer(app);
 initIO(server);
 
+// Health API
+app.get("/health", (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: "Server is healthy",
+        environment: process.env.NODE_ENV,
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString(),
+    });
+});
+
 app.use((req, res, next) => {
     next(new ApiError("Request url is not found.", 404));
 });
@@ -25,6 +36,7 @@ app.use(globalErrorHandler);
     try {
         await connection();
         require("./src/workers/order.worker.js");
+
         server.listen(process.env.PORT, () => {
             console.log(
                 `🚀 Server (API + Socket.IO) running on port ${process.env.PORT} in ${process.env.NODE_ENV} phase.`
